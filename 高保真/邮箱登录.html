@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - DocuVault</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 - 保持一致的样式系统 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+            .input-focus {
+                @apply focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .form-appear {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .input-icon {
+            left: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .toggle-password {
+            right: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+        
+        .error-message {
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                    </div>
+                </div>
+                
+                <!-- 右侧操作区 -->
+                <div class="flex items-center space-x-4">
+                    <a href="首页页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        返回首页
+                    </a>
+                    <a href="扫码登录.html" class="text-purple-600 hover:text-purple-700 transition-colors duration-300 font-medium">
+                        扫码登录
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-md">
+            <!-- 登录卡片 -->
+            <div class="bg-white rounded-lg journal-shadow overflow-hidden form-appear">
+                <div class="p-8">
+                    <!-- 登录标题 -->
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 font-serif mb-2">欢迎回来</h2>
+                        <p class="text-gray-600">登录您的 DocuVault 账号，继续您的学习之旅</p>
+                    </div>
+                    
+                    <!-- 登录表单 -->
+                    <form id="login-form" class="space-y-6">
+                        <!-- 邮箱输入 -->
+                        <div class="relative">
+                            <div class="absolute input-icon pl-3 text-gray-400">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <input type="email" 
+                                   name="email" 
+                                   id="email"
+                                   placeholder="邮箱地址"
+                                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg input-focus"
+                                   required>
+                            <div class="error-message text-red-500 text-sm mt-1" id="email-error"></div>
+                        </div>
+                        
+                        <!-- 密码输入 -->
+                        <div class="relative">
+                            <div class="absolute input-icon pl-3 text-gray-400">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <input type="password" 
+                                   name="password" 
+                                   id="password"
+                                   placeholder="密码"
+                                   class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg input-focus"
+                                   required>
+                            <div class="absolute toggle-password pr-3 text-gray-400">
+                                <i class="fas fa-eye-slash" id="password-toggle"></i>
+                            </div>
+                            <div class="error-message text-red-500 text-sm mt-1" id="password-error"></div>
+                        </div>
+                        
+                        <!-- 记住我和忘记密码 -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input type="checkbox" 
+                                       id="remember-me" 
+                                       name="remember-me"
+                                       class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                                <label for="remember-me" class="ml-2 block text-sm text-gray-700">
+                                    记住我
+                                </label>
+                            </div>
+                            <a href="#" class="text-sm text-purple-600 hover:text-purple-500 transition-colors duration-300">
+                                忘记密码？
+                            </a>
+                        </div>
+                        
+                        <!-- 登录按钮 -->
+                        <button type="submit" 
+                                class="w-full btn-primary py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                id="login-btn">
+                            <span id="login-text">登录</span>
+                            <i class="fas fa-spinner fa-spin ml-2 hidden" id="login-spinner"></i>
+                        </button>
+                        
+                        <!-- 通用错误提示 -->
+                        <div class="error-message text-red-500 text-sm text-center" id="form-error"></div>
+                    </form>
+                    
+                    <!-- 分割线 -->
+                    <div class="mt-6">
+                        <div class="relative">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-gray-300"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-2 bg-white text-gray-500">或使用以下方式登录</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 社交登录 -->
+                    <div class="grid grid-cols-3 gap-3 mt-6">
+                        <button class="btn-secondary flex justify-center items-center py-2 px-4 rounded-lg">
+                            <i class="fab fa-github"></i>
+                        </button>
+                        <button class="btn-secondary flex justify-center items-center py-2 px-4 rounded-lg">
+                            <i class="fab fa-google"></i>
+                        </button>
+                        <button class="btn-secondary flex justify-center items-center py-2 px-4 rounded-lg">
+                            <i class="fab fa-weixin"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 注册提示 -->
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">
+                    还没有账号? 
+                    <a href="创建账户.html" class="font-medium text-purple-600 hover:text-purple-500 transition-colors duration-300">
+                        立即注册
+                    </a>
+                </p>
+            </div>
+            
+            <!-- 安全提示 -->
+            <div class="mt-8 text-center text-xs text-gray-500">
+                <p>DocuVault 重视您的账号安全，我们采用银行级加密保护您的数据</p>
+                <p class="mt-1">© 2024 DocuVault 保留所有权利</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 密码可见性切换
+            const passwordInput = document.getElementById('password');
+            const passwordToggle = document.getElementById('password-toggle');
+
+            passwordToggle.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+
+                // 切换图标
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+
+            // 表单验证
+            const loginForm = document.getElementById('login-form');
+            const emailInput = document.getElementById('email');
+            const loginBtn = document.getElementById('login-btn');
+            const loginText = document.getElementById('login-text');
+            const loginSpinner = document.getElementById('login-spinner');
+
+            // 邮箱格式验证
+            function validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            // 显示错误信息
+            function showError(elementId, message) {
+                const errorElement = document.getElementById(elementId);
+                errorElement.textContent = message;
+                errorElement.classList.add('show');
+            }
+
+            // 隐藏错误信息
+            function hideError(elementId) {
+                const errorElement = document.getElementById(elementId);
+                errorElement.classList.remove('show');
+            }
+
+            // 实时邮箱验证
+            emailInput.addEventListener('blur', function() {
+                const email = this.value.trim();
+                if (email && !validateEmail(email)) {
+                    showError('email-error', '请输入有效的邮箱地址');
+                    this.classList.add('border-red-500');
+                } else {
+                    hideError('email-error');
+                    this.classList.remove('border-red-500');
+                }
+            });
+
+            // 表单提交处理
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // 清除之前的错误信息
+                hideError('email-error');
+                hideError('password-error');
+                hideError('form-error');
+
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+
+                let hasError = false;
+
+                // 验证邮箱
+                if (!email) {
+                    showError('email-error', '请输入邮箱地址');
+                    hasError = true;
+                } else if (!validateEmail(email)) {
+                    showError('email-error', '请输入有效的邮箱地址');
+                    hasError = true;
+                }
+
+                // 验证密码
+                if (!password) {
+                    showError('password-error', '请输入密码');
+                    hasError = true;
+                } else if (password.length < 6) {
+                    showError('password-error', '密码长度至少6位');
+                    hasError = true;
+                }
+
+                if (hasError) {
+                    return;
+                }
+
+                // 显示加载状态
+                loginBtn.disabled = true;
+                loginText.textContent = '登录中...';
+                loginSpinner.classList.remove('hidden');
+
+                // 模拟登录请求
+                setTimeout(() => {
+                    // 这里应该是实际的登录API调用
+                    // 模拟登录成功
+                    if (email === 'demo@docuvault.com' && password === 'demo123') {
+                        // 登录成功，跳转到首页
+                        window.location.href = '首页页参考界面.html';
+                    } else {
+                        // 登录失败
+                        showError('form-error', '邮箱或密码错误，请重试');
+
+                        // 恢复按钮状态
+                        loginBtn.disabled = false;
+                        loginText.textContent = '登录';
+                        loginSpinner.classList.add('hidden');
+                    }
+                }, 1500);
+            });
+
+            // 社交登录按钮事件
+            const socialButtons = document.querySelectorAll('.btn-secondary');
+            socialButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const icon = this.querySelector('i');
+                    if (icon.classList.contains('fa-github')) {
+                        alert('GitHub 登录功能开发中...');
+                    } else if (icon.classList.contains('fa-google')) {
+                        alert('Google 登录功能开发中...');
+                    } else if (icon.classList.contains('fa-weixin')) {
+                        // 跳转到扫码登录页面
+                        window.location.href = '扫码登录.html';
+                    }
+                });
+            });
+
+            // 记住我功能
+            const rememberCheckbox = document.getElementById('remember-me');
+
+            // 页面加载时检查是否有保存的登录信息
+            const savedEmail = localStorage.getItem('rememberedEmail');
+            if (savedEmail) {
+                emailInput.value = savedEmail;
+                rememberCheckbox.checked = true;
+            }
+
+            // 登录成功时保存邮箱（如果勾选了记住我）
+            loginForm.addEventListener('submit', function() {
+                if (rememberCheckbox.checked) {
+                    localStorage.setItem('rememberedEmail', emailInput.value);
+                } else {
+                    localStorage.removeItem('rememberedEmail');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - DocuVault</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 - 保持一致的样式系统 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .input-focus {
+                @apply focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .form-appear {
+            animation: formFadeIn 0.5s ease-out;
+        }
+        
+        @keyframes formFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .journal-shadow-hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .input-icon {
+            left: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .toggle-password {
+            right: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+        
+        .strength-meter {
+            height: 4px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                    </div>
+                </div>
+                
+                <!-- 右侧操作区 -->
+                <div class="flex items-center">
+                    <a href="首页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        返回首页
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-md">
+            <!-- 注册卡片 -->
+            <div class="bg-white rounded-lg journal-shadow overflow-hidden form-appear">
+                <div class="p-8">
+                    <!-- 注册标题 -->
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 font-serif mb-2">创建账号</h2>
+                        <p class="text-gray-600">加入 DocuVault，探索海量优质文档资源</p>
+                    </div>
+                    
+                    <!-- 注册表单 -->
+                    <form id="register-form" class="space-y-6">
+                        <!-- 用户名输入 -->
+                        <div class="relative">
+                            <div class="absolute input-icon pl-3 text-gray-400">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <input type="text" 
+                                   name="username" 
+                                   id="username"
+                                   placeholder="用户名"
+                                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg input-focus"
+                                   required>
+                        </div>
+                        
+                        <!-- 邮箱输入 -->
+                        <div class="relative">
+                            <div class="absolute input-icon pl-3 text-gray-400">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <input type="email" 
+                                   name="email" 
+                                   id="email"
+                                   placeholder="邮箱地址"
+                                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg input-focus"
+                                   required>
+                        </div>
+                        
+                        <!-- 密码输入 -->
+                        <div class="relative">
+                            <div class="absolute input-icon pl-3 text-gray-400">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <input type="password" 
+                                   name="password" 
+                                   id="password"
+                                   placeholder="设置密码（至少8位）"
+                                   class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg input-focus"
+                                   required>
+                            <div class="absolute toggle-password pr-3 text-gray-400">
+                                <i class="fas fa-eye-slash" id="password-toggle"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- 密码强度指示器 -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>密码强度</span>
+                                <span id="strength-text">弱</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                <div id="strength-indicator" class="strength-meter bg-red-500 rounded-full" style="width: 30%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 确认密码 -->
+                        <div class="relative">
+                            <div class="absolute input-icon pl-3 text-gray-400">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <input type="password" 
+                                   name="confirm-password" 
+                                   id="confirm-password"
+                                   placeholder="确认密码"
+                                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg input-focus"
+                                   required>
+                        </div>
+                        
+                        <!-- 同意条款 -->
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input id="terms" name="terms" type="checkbox" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded" required>
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="terms" class="text-gray-600">我同意 
+                                    <a href="#" class="text-purple-600 hover:text-purple-500">服务条款</a> 和 
+                                    <a href="#" class="text-purple-600 hover:text-purple-500">隐私政策</a>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- 注册按钮 -->
+                        <div>
+                            <button type="submit" class="w-full btn-primary py-3 px-4 rounded-lg">
+                                注册账号
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- 分隔线 -->
+                    <div class="my-6">
+                        <div class="relative">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-gray-200"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-2 bg-white text-gray-500">或使用以下方式注册</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 社交注册 -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <button class="btn-secondary flex justify-center items-center py-2 px-4 rounded-lg">
+                            <i class="fab fa-github"></i>
+                        </button>
+                        <button class="btn-secondary flex justify-center items-center py-2 px-4 rounded-lg">
+                            <i class="fab fa-google"></i>
+                        </button>
+                        <button class="btn-secondary flex justify-center items-center py-2 px-4 rounded-lg">
+                            <i class="fab fa-weixin"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 登录提示 -->
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">
+                    已有账号? 
+                    <a href="login.html" class="font-medium text-purple-600 hover:text-purple-500 transition-colors duration-300">
+                        立即登录
+                    </a>
+                </p>
+            </div>
+            
+            <!-- 安全提示 -->
+            <div class="mt-8 text-center text-xs text-gray-500">
+                <p>DocuVault 重视您的账号安全，我们采用银行级加密保护您的数据</p>
+                <p class="mt-1">© 2024 DocuVault 保留所有权利</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 密码可见性切换
+            const passwordInput = document.getElementById('password');
+            const passwordToggle = document.getElementById('password-toggle');
+            
+            passwordToggle.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // 切换图标
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+            
+            // 密码强度检测
+            const strengthIndicator = document.getElementById('strength-indicator');
+            const strengthText = document.getElementById('strength-text');
+            
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                let strength = 0;
+                
+                // 基础长度检查
+                if (password.length >= 8) strength += 25;
+                // 包含小写字母
+                if (/[a-z]/.test(password)) strength += 25;
+                // 包含大写字母
+                if (/[A-Z]/.test(password)) strength += 25;
+                // 包含数字或特殊字符
+                if (/[0-9!@#$%^&*]/.test(password)) strength += 25;
+                
+                // 更新强度指示器
+                strengthIndicator.style.width = `${strength}%`;
+                
+                // 更新颜色和文本
+                if (strength < 50) {
+                    strengthIndicator.className = 'strength-meter bg-red-500 rounded-full';
+                    strengthText.textContent = '弱';
+                    strengthText.className = 'text-red-500';
+                } else if (strength < 75) {
+                    strengthIndicator.className = 'strength-meter bg-yellow-500 rounded-full';
+                    strengthText.textContent = '中';
+                    strengthText.className = 'text-yellow-500';
+                } else {
+                    strengthIndicator.className = 'strength-meter bg-green-500 rounded-full';
+                    strengthText.textContent = '强';
+                    strengthText.className = 'text-green-500';
+                }
+            });
+            
+            // 表单提交处理
+            const registerForm = document.getElementById('register-form');
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                
+                // 验证密码一致性
+                if (password !== confirmPassword) {
+                    alert('两次输入的密码不一致');
+                    return;
+                }
+                
+                // 模拟注册加载状态
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalText = submitButton.innerHTML;
+                
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>注册中...';
+                
+                // 模拟API请求延迟
+                setTimeout(() => {
+                    alert('注册成功！请登录您的账号');
+                    window.location.href = 'login.html';
+                }, 1500);
+            });
+            
+            // 输入框交互效果
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('journal-shadow-hover');
+                });
+                input.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('journal-shadow-hover');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
