@@ -122,19 +122,20 @@
                 
                 <!-- 导航链接 - 仅在中等及以上屏幕显示 -->
                 <div class="hidden md:flex items-center space-x-8">
-                    <a href="#" class="text-purple-600 font-medium">首页</a>
-                    <a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">分类</a>
-                    <a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">热门</a>
-                    <a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">最新</a>
+                    <a href="首页页参考界面.html" class="text-purple-600 font-medium">首页</a>
+                    <a href="文章分类.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">分类</a>
+                    <a href="文章列表页.html?sort=popular" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">热门</a>
+                    <a href="文章列表页.html?sort=latest" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">最新</a>
                     <a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">关于</a>
                 </div>
                 
                 <!-- 搜索和用户操作 -->
                 <div class="flex items-center space-x-4">
                     <div class="relative hidden sm:block">
-                        <input type="text" 
+                        <input type="text"
                                placeholder="搜索文档..."
-                               class="w-48 lg:w-64 pl-10 pr-4 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-sm">
+                               class="w-48 lg:w-64 pl-10 pr-4 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-sm"
+                               onkeypress="if(event.key==='Enter') window.location.href='搜索结果.html?q='+encodeURIComponent(this.value)">
                         <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
                     </div>
                     
@@ -145,9 +146,9 @@
                         <i class="fas fa-bookmark"></i>
                     </button>
                     <div class="relative">
-                        <button class="flex items-center space-x-2">
+                        <a href="个人中心.html" class="flex items-center space-x-2">
                             <img class="w-8 h-8 rounded-full border-2 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="用户头像">
-                        </button>
+                        </a>
                     </div>
                     
                     <!-- 移动端菜单按钮 -->
@@ -183,9 +184,9 @@
                     </div>
                     <div class="mt-6 flex items-center text-sm text-gray-600">
                         <span class="mr-4">热门搜索:</span>
-                        <a href="#" class="hover:text-purple-600 transition-colors duration-300 mr-3">React</a>
-                        <a href="#" class="hover:text-purple-600 transition-colors duration-300 mr-3">Python</a>
-                        <a href="#" class="hover:text-purple-600 transition-colors duration-300">JavaScript</a>
+                        <a href="搜索结果.html?q=React" class="hover:text-purple-600 transition-colors duration-300 mr-3">React</a>
+                        <a href="搜索结果.html?q=Python" class="hover:text-purple-600 transition-colors duration-300 mr-3">Python</a>
+                        <a href="搜索结果.html?q=JavaScript" class="hover:text-purple-600 transition-colors duration-300">JavaScript</a>
                     </div>
                 </div>
                 <div class="md:w-1/2 flex justify-center">
@@ -201,59 +202,59 @@
         <section class="mb-16">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 font-serif">浏览分类</h2>
-                <a href="#" class="text-purple-600 hover:text-purple-700 flex items-center text-sm font-medium transition-colors duration-300">
+                <a href="文章分类.html" class="text-purple-600 hover:text-purple-700 flex items-center text-sm font-medium transition-colors duration-300">
                     查看全部 <i class="fas fa-arrow-right ml-1 text-xs"></i>
                 </a>
             </div>
             
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 <!-- 分类项 1 -->
-                <a href="#" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
+                <a href="文章分类.html?category=frontend" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
                     <div class="w-12 h-12 category-bg-1 rounded-full flex items-center justify-center text-purple-600 mb-3">
                         <i class="fas fa-code text-xl"></i>
                     </div>
                     <h3 class="font-medium text-gray-900 mb-1">前端开发</h3>
                     <p class="text-xs text-gray-500">248 篇文档</p>
                 </a>
-                
+
                 <!-- 分类项 2 -->
-                <a href="#" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
+                <a href="文章分类.html?category=backend" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
                     <div class="w-12 h-12 category-bg-2 rounded-full flex items-center justify-center text-blue-600 mb-3">
                         <i class="fas fa-server text-xl"></i>
                     </div>
                     <h3 class="font-medium text-gray-900 mb-1">后端开发</h3>
                     <p class="text-xs text-gray-500">186 篇文档</p>
                 </a>
-                
+
                 <!-- 分类项 3 -->
-                <a href="#" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
+                <a href="文章分类.html?category=database" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
                     <div class="w-12 h-12 category-bg-3 rounded-full flex items-center justify-center text-green-600 mb-3">
                         <i class="fas fa-database text-xl"></i>
                     </div>
                     <h3 class="font-medium text-gray-900 mb-1">数据库</h3>
                     <p class="text-xs text-gray-500">124 篇文档</p>
                 </a>
-                
+
                 <!-- 分类项 4 -->
-                <a href="#" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
+                <a href="文章分类.html?category=mobile" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
                     <div class="w-12 h-12 category-bg-4 rounded-full flex items-center justify-center text-amber-600 mb-3">
                         <i class="fas fa-mobile-alt text-xl"></i>
                     </div>
                     <h3 class="font-medium text-gray-900 mb-1">移动开发</h3>
                     <p class="text-xs text-gray-500">98 篇文档</p>
                 </a>
-                
+
                 <!-- 分类项 5 -->
-                <a href="#" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
+                <a href="文章分类.html?category=cloud" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
                     <div class="w-12 h-12 category-bg-5 rounded-full flex items-center justify-center text-pink-600 mb-3">
                         <i class="fas fa-cloud text-xl"></i>
                     </div>
                     <h3 class="font-medium text-gray-900 mb-1">云计算</h3>
                     <p class="text-xs text-gray-500">76 篇文档</p>
                 </a>
-                
+
                 <!-- 分类项 6 -->
-                <a href="#" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
+                <a href="文章分类.html?category=security" class="bg-white rounded-lg journal-shadow p-5 flex flex-col items-center text-center card-hover">
                     <div class="w-12 h-12 category-bg-6 rounded-full flex items-center justify-center text-red-600 mb-3">
                         <i class="fas fa-shield-alt text-xl"></i>
                     </div>
@@ -267,14 +268,14 @@
         <section class="mb-16">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 font-serif">热门推荐</h2>
-                <a href="#" class="text-purple-600 hover:text-purple-700 flex items-center text-sm font-medium transition-colors duration-300">
+                <a href="文章列表页.html?sort=popular" class="text-purple-600 hover:text-purple-700 flex items-center text-sm font-medium transition-colors duration-300">
                     更多热门 <i class="fas fa-arrow-right ml-1 text-xs"></i>
                 </a>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- 文档卡片 1 -->
-                <a href="Modern React Hooks 完全指南.html" class="bg-white rounded-lg journal-shadow overflow-hidden card-hover">
+                <a href="文章预览.html?id=react-hooks-guide" class="bg-white rounded-lg journal-shadow overflow-hidden card-hover">
                     <div class="h-40 bg-gray-100 relative">
                         <img src="https://picsum.photos/600/400?random=1" alt="React Hooks 指南封面" class="w-full h-full object-cover">
                         <div class="absolute top-3 left-3 bg-purple-600 text-white text-xs font-medium px-2 py-1 rounded">
@@ -298,7 +299,7 @@
                 </a>
                 
                 <!-- 文档卡片 2 -->
-                <a href="#" class="bg-white rounded-lg journal-shadow overflow-hidden card-hover">
+                <a href="文章预览.html?id=python-data-analysis" class="bg-white rounded-lg journal-shadow overflow-hidden card-hover">
                     <div class="h-40 bg-gray-100 relative">
                         <img src="https://picsum.photos/600/400?random=2" alt="Python 数据分析封面" class="w-full h-full object-cover">
                         <div class="absolute top-3 left-3 bg-green-600 text-white text-xs font-medium px-2 py-1 rounded">
@@ -322,7 +323,7 @@
                 </a>
                 
                 <!-- 文档卡片 3 -->
-                <a href="#" class="bg-white rounded-lg journal-shadow overflow-hidden card-hover">
+                <a href="文章预览.html?id=docker-kubernetes" class="bg-white rounded-lg journal-shadow overflow-hidden card-hover">
                     <div class="h-40 bg-gray-100 relative">
                         <img src="https://picsum.photos/600/400?random=3" alt="Docker 容器化封面" class="w-full h-full object-cover">
                         <div class="absolute top-3 left-3 bg-blue-600 text-white text-xs font-medium px-2 py-1 rounded">
@@ -351,14 +352,14 @@
         <section class="mb-16">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 font-serif">最新发布</h2>
-                <a href="#" class="text-purple-600 hover:text-purple-700 flex items-center text-sm font-medium transition-colors duration-300">
+                <a href="文章列表页.html?sort=latest" class="text-purple-600 hover:text-purple-700 flex items-center text-sm font-medium transition-colors duration-300">
                     更多最新 <i class="fas fa-arrow-right ml-1 text-xs"></i>
                 </a>
             </div>
             
             <div class="space-y-4">
                 <!-- 最新文档项 1 -->
-                <a href="#" class="bg-white rounded-lg journal-shadow p-4 flex flex-col md:flex-row gap-4 card-hover">
+                <a href="文章预览.html?id=typescript-guide" class="bg-white rounded-lg journal-shadow p-4 flex flex-col md:flex-row gap-4 card-hover">
                     <div class="md:w-1/5 h-32 bg-gray-100 rounded overflow-hidden">
                         <img src="https://picsum.photos/300/200?random=4" alt="TypeScript 教程封面" class="w-full h-full object-cover">
                     </div>
@@ -383,7 +384,7 @@
                 </a>
                 
                 <!-- 最新文档项 2 -->
-                <a href="#" class="bg-white rounded-lg journal-shadow p-4 flex flex-col md:flex-row gap-4 card-hover">
+                <a href="文章预览.html?id=flutter-development" class="bg-white rounded-lg journal-shadow p-4 flex flex-col md:flex-row gap-4 card-hover">
                     <div class="md:w-1/5 h-32 bg-gray-100 rounded overflow-hidden">
                         <img src="https://picsum.photos/300/200?random=5" alt="Flutter 教程封面" class="w-full h-full object-cover">
                     </div>
@@ -408,7 +409,7 @@
                 </a>
                 
                 <!-- 最新文档项 3 -->
-                <a href="#" class="bg-white rounded-lg journal-shadow p-4 flex flex-col md:flex-row gap-4 card-hover">
+                <a href="文章预览.html?id=golang-tutorial" class="bg-white rounded-lg journal-shadow p-4 flex flex-col md:flex-row gap-4 card-hover">
                     <div class="md:w-1/5 h-32 bg-gray-100 rounded overflow-hidden">
                         <img src="https://picsum.photos/300/200?random=6" alt="Go 语言教程封面" class="w-full h-full object-cover">
                     </div>
@@ -438,7 +439,7 @@
         <section>
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 font-serif">精选作者</h2>
-                <a href="#" class="text-purple-600 hover:text-purple-700 flex items-center text-sm font-medium transition-colors duration-300">
+                <a href="文章列表页.html?view=authors" class="text-purple-600 hover:text-purple-700 flex items-center text-sm font-medium transition-colors duration-300">
                     查看全部作者 <i class="fas fa-arrow-right ml-1 text-xs"></i>
                 </a>
             </div>
@@ -560,10 +561,10 @@
                 <div>
                     <h4 class="font-semibold text-gray-900 mb-4">快速链接</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">热门文档</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">最新发布</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">免费资源</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">专家推荐</a></li>
+                        <li><a href="文章列表页.html?sort=popular" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">热门文档</a></li>
+                        <li><a href="文章列表页.html?sort=latest" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">最新发布</a></li>
+                        <li><a href="文章列表页.html?filter=free" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">免费资源</a></li>
+                        <li><a href="文章列表页.html?sort=recommended" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">专家推荐</a></li>
                     </ul>
                 </div>
                 
@@ -571,10 +572,10 @@
                 <div>
                     <h4 class="font-semibold text-gray-900 mb-4">热门分类</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">前端开发</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">后端架构</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">数据科学</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">DevOps</a></li>
+                        <li><a href="文章分类.html?category=frontend" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">前端开发</a></li>
+                        <li><a href="文章分类.html?category=backend" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">后端架构</a></li>
+                        <li><a href="文章分类.html?category=datascience" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">数据科学</a></li>
+                        <li><a href="文章分类.html?category=devops" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">DevOps</a></li>
                     </ul>
                 </div>
                 

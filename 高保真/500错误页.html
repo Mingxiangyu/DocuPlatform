@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务器错误 - DocuVault</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        red: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .error-illustration {
+            background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%);
+            border-radius: 20px;
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .error-illustration::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        .error-number {
+            font-size: 8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            text-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        }
+        
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        
+        .floating-element {
+            position: absolute;
+            color: rgba(239, 68, 68, 0.3);
+            animation: float 4s ease-in-out infinite;
+        }
+        
+        .floating-element:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .floating-element:nth-child(2) {
+            top: 60%;
+            right: 15%;
+            animation-delay: 1s;
+        }
+        
+        .floating-element:nth-child(3) {
+            bottom: 30%;
+            left: 20%;
+            animation-delay: 2s;
+        }
+        
+        .floating-element:nth-child(4) {
+            top: 40%;
+            right: 30%;
+            animation-delay: 3s;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-15px) rotate(3deg);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-checking {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-error {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .status-ok {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .breadcrumb a {
+            color: #6b7280;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .breadcrumb a:hover {
+            color: #a855f7;
+        }
+        
+        .breadcrumb .separator {
+            color: #d1d5db;
+        }
+        
+        .error-details {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .retry-button {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .retry-button.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="首页页参考界面.html" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                    </a>
+                </div>
+                
+                <!-- 导航链接 -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="首页页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        首页
+                    </a>
+                    <a href="文章列表页.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        文章
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        合集
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        关于
+                    </a>
+                </div>
+                
+                <!-- 用户操作 -->
+                <div class="flex items-center space-x-4">
+                    <a href="邮箱登录.html" class="btn-secondary px-4 py-2 rounded-lg text-sm">
+                        登录
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- 面包屑导航 -->
+        <div class="breadcrumb">
+            <a href="首页页参考界面.html">
+                <i class="fas fa-home"></i>
+                首页
+            </a>
+            <span class="separator">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </span>
+            <span class="text-gray-900">服务器错误</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <!-- 左侧：错误信息 -->
+            <div class="text-center lg:text-left">
+                <div class="error-illustration relative mb-8">
+                    <div class="floating-elements">
+                        <div class="floating-element">
+                            <i class="fas fa-server text-2xl"></i>
+                        </div>
+                        <div class="floating-element">
+                            <i class="fas fa-exclamation-triangle text-xl"></i>
+                        </div>
+                        <div class="floating-element">
+                            <i class="fas fa-tools text-lg"></i>
+                        </div>
+                        <div class="floating-element">
+                            <i class="fas fa-cog text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <div class="error-number">500</div>
+                        <div class="text-2xl font-bold text-gray-900 mb-2">服务器开小差了</div>
+                        <div class="text-gray-600">
+                            我们的工程师正在紧急修复中
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-900 mb-3">发生了什么：</h2>
+                        <ul class="text-gray-600 space-y-2">
+                            <li class="flex items-center">
+                                <i class="fas fa-circle text-red-400 text-xs mr-3"></i>
+                                服务器遇到了内部错误
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-circle text-red-400 text-xs mr-3"></i>
+                                技术团队已收到错误报告
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-circle text-red-400 text-xs mr-3"></i>
+                                正在进行紧急修复
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button onclick="retryPage()" class="retry-button btn-primary px-6 py-3 rounded-lg" id="retry-btn">
+                            <i class="fas fa-redo mr-2"></i>
+                            重试
+                        </button>
+                        <a href="首页页参考界面.html" class="btn-secondary px-6 py-3 rounded-lg text-center">
+                            <i class="fas fa-home mr-2"></i>
+                            回到首页
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：系统状态和帮助 -->
+            <div class="space-y-8">
+                <!-- 系统状态 -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">系统状态检查</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-database text-gray-500"></i>
+                                <span class="text-sm font-medium">数据库连接</span>
+                            </div>
+                            <span class="status-indicator status-checking" id="db-status">
+                                <i class="fas fa-spinner fa-spin mr-1"></i>
+                                检查中
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-cloud text-gray-500"></i>
+                                <span class="text-sm font-medium">API服务</span>
+                            </div>
+                            <span class="status-indicator status-checking" id="api-status">
+                                <i class="fas fa-spinner fa-spin mr-1"></i>
+                                检查中
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-file-alt text-gray-500"></i>
+                                <span class="text-sm font-medium">文件系统</span>
+                            </div>
+                            <span class="status-indicator status-checking" id="file-status">
+                                <i class="fas fa-spinner fa-spin mr-1"></i>
+                                检查中
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 错误详情 -->
+                <div class="error-details">
+                    <h4 class="text-md font-semibold text-gray-900 mb-3">错误详情</h4>
+                    
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">错误ID:</span>
+                            <span class="font-mono text-gray-900" id="error-id">ERR-500-20240120-001</span>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">发生时间:</span>
+                            <span class="text-gray-900" id="error-time">2024-01-20 14:30:25</span>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">服务器:</span>
+                            <span class="text-gray-900">Web-Server-01</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <button onclick="reportProblem()" class="text-purple-600 hover:text-purple-700 text-sm font-medium">
+                            <i class="fas fa-bug mr-1"></i>
+                            报告问题
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 联系支持 -->
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+                    <h4 class="text-md font-semibold text-purple-900 mb-3">需要帮助？</h4>
+                    <p class="text-sm text-purple-700 mb-4">
+                        如果问题持续存在，请联系我们的技术支持团队。
+                    </p>
+                    
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center text-purple-700">
+                            <i class="fas fa-envelope mr-2"></i>
+                            <span>support@docuvault.com</span>
+                        </div>
+                        <div class="flex items-center text-purple-700">
+                            <i class="fas fa-clock mr-2"></i>
+                            <span>7x24小时技术支持</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-2 mb-4">
+                    <div class="w-6 h-6 bg-gradient-to-br from-purple-600 to-purple-700 rounded flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-xs"></i>
+                    </div>
+                    <span class="text-lg font-bold text-gray-900 font-serif">DocuVault</span>
+                </div>
+                <p class="text-gray-600 text-sm">
+                    © 2024 DocuVault. 专业的知识付费平台
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 生成错误ID和时间
+        function generateErrorDetails() {
+            const now = new Date();
+            const errorId = `ERR-500-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
+            const errorTime = now.toLocaleString('zh-CN');
+            
+            document.getElementById('error-id').textContent = errorId;
+            document.getElementById('error-time').textContent = errorTime;
+        }
+        
+        // 模拟系统状态检查
+        function checkSystemStatus() {
+            const statuses = ['db-status', 'api-status', 'file-status'];
+            
+            statuses.forEach((statusId, index) => {
+                setTimeout(() => {
+                    const element = document.getElementById(statusId);
+                    const isOk = Math.random() > 0.3; // 70%概率正常
+                    
+                    if (isOk) {
+                        element.className = 'status-indicator status-ok';
+                        element.innerHTML = '<i class="fas fa-check mr-1"></i>正常';
+                    } else {
+                        element.className = 'status-indicator status-error';
+                        element.innerHTML = '<i class="fas fa-times mr-1"></i>异常';
+                    }
+                }, (index + 1) * 1000);
+            });
+        }
+        
+        // 重试页面
+        function retryPage() {
+            const retryBtn = document.getElementById('retry-btn');
+            retryBtn.classList.add('loading');
+            retryBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>重试中...';
+            
+            setTimeout(() => {
+                // 模拟重试结果
+                const success = Math.random() > 0.5;
+                
+                if (success) {
+                    window.location.reload();
+                } else {
+                    retryBtn.classList.remove('loading');
+                    retryBtn.innerHTML = '<i class="fas fa-redo mr-2"></i>重试';
+                    alert('重试失败，请稍后再试或联系技术支持。');
+                }
+            }, 2000);
+        }
+        
+        // 报告问题
+        function reportProblem() {
+            const errorId = document.getElementById('error-id').textContent;
+            const subject = encodeURIComponent(`错误报告 - ${errorId}`);
+            const body = encodeURIComponent(`错误ID: ${errorId}\n发生时间: ${document.getElementById('error-time').textContent}\n页面URL: ${window.location.href}\n\n请描述您遇到的问题：\n`);
+            
+            window.location.href = `mailto:support@docuvault.com?subject=${subject}&body=${body}`;
+        }
+        
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', function() {
+            generateErrorDetails();
+            checkSystemStatus();
+            
+            // 记录500错误（用于分析）
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'exception', {
+                    description: '500 Internal Server Error',
+                    fatal: false,
+                    custom_map: {
+                        'error_id': document.getElementById('error-id').textContent
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

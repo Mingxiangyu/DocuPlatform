@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>附件管理 - DocuVault 管理后台</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+            .nav-active {
+                @apply bg-purple-50 text-purple-600 border-r-2 border-purple-600;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .admin-sidebar {
+            width: 280px;
+            min-height: calc(100vh - 64px);
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            min-width: 160px;
+            z-index: 50;
+            display: none;
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 0.75rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-upload-area:hover,
+        .file-upload-area.dragover {
+            border-color: #9333ea;
+            background-color: #faf5ff;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-item:hover {
+            background-color: #f9fafb;
+            border-color: #9333ea;
+        }
+        
+        .file-item.selected {
+            background-color: #faf5ff;
+            border-color: #9333ea;
+        }
+        
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+        
+        .file-icon.pdf {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .file-icon.image {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .file-icon.document {
+            background-color: #ecfdf5;
+            color: #059669;
+        }
+        
+        .file-icon.archive {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        
+        .file-icon.other {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #9333ea;
+            transition: width 0.3s ease;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shield-alt text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                        <span class="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded">
+                            管理后台
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- 用户操作 -->
+                <div class="flex items-center space-x-4">
+                    <a href="首页页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        前台首页
+                    </a>
+                    <div class="relative">
+                        <button class="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors duration-300" onclick="toggleUserMenu()">
+                            <img class="w-8 h-8 rounded-full border-2 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="管理员头像">
+                            <span class="text-sm font-medium">管理员</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="user-menu" class="dropdown-menu">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">个人设置</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">修改密码</a>
+                            <hr class="my-1">
+                            <a href="后台管理登录.html" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">退出登录</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <div class="flex flex-1">
+        <!-- 侧边栏 -->
+        <aside class="admin-sidebar bg-white border-r border-gray-200 journal-shadow">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">管理功能</h3>
+                <nav class="space-y-2">
+                    <a href="后台文章管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-file-alt w-5 text-center"></i>
+                        <span>文章管理</span>
+                    </a>
+                    <a href="后台用户管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-users w-5 text-center"></i>
+                        <span>用户管理</span>
+                    </a>
+                    <a href="后台订单管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-shopping-cart w-5 text-center"></i>
+                        <span>订单管理</span>
+                    </a>
+                    <a href="后台合集管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-layer-group w-5 text-center"></i>
+                        <span>合集管理</span>
+                    </a>
+                    <a href="后台数据统计.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-chart-bar w-5 text-center"></i>
+                        <span>数据统计</span>
+                    </a>
+                    <a href="后台附件管理.html" class="nav-active flex items-center space-x-3 px-4 py-3 text-sm rounded-lg transition-colors duration-300">
+                        <i class="fas fa-paperclip w-5 text-center"></i>
+                        <span>附件管理</span>
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 p-6">
+            <!-- 页面标题和操作栏 -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 font-serif">附件管理</h1>
+                    <p class="text-gray-600 mt-2">管理文章配套文件和资源附件</p>
+                </div>
+                
+                <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-500">存储空间：</span>
+                        <span class="text-sm font-medium text-gray-900">2.3GB / 10GB</span>
+                        <div class="w-20 h-2 bg-gray-200 rounded-full">
+                            <div class="w-6 h-2 bg-purple-600 rounded-full"></div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-secondary px-4 py-2 rounded-lg text-sm" onclick="showUploadModal()">
+                        <i class="fas fa-upload mr-2"></i>上传文件
+                    </button>
+                    
+                    <button class="btn-primary px-4 py-2 rounded-lg text-sm" onclick="batchDelete()">
+                        <i class="fas fa-trash mr-2"></i>批量删除
+                    </button>
+                </div>
+            </div>
+
+            <!-- 搜索和筛选栏 -->
+            <div class="bg-white rounded-lg journal-shadow p-6 mb-6" data-component="search-filter">
+                <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="search-input" placeholder="搜索文件名、类型或关联文章..." 
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                        </div>
+                    </div>
+                    
+                    <select id="file-type-filter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="">所有类型</option>
+                        <option value="image">图片</option>
+                        <option value="document">文档</option>
+                        <option value="pdf">PDF</option>
+                        <option value="archive">压缩包</option>
+                        <option value="other">其他</option>
+                    </select>
+                    
+                    <select id="sort-by" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="date">按时间排序</option>
+                        <option value="name">按名称排序</option>
+                        <option value="size">按大小排序</option>
+                        <option value="downloads">按下载量排序</option>
+                    </select>
+                    
+                    <div class="flex items-center space-x-2">
+                        <button id="grid-view" class="p-2 text-gray-400 hover:text-purple-600 transition-colors duration-300" onclick="switchView('grid')">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button id="list-view" class="p-2 text-purple-600" onclick="switchView('list')">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 文件列表 -->
+            <div class="bg-white rounded-lg journal-shadow" data-component="file-manager">
+                <!-- 文件统计 -->
+                <div class="p-6 border-b border-gray-200">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900" id="total-files">156</div>
+                            <div class="text-sm text-gray-500">总文件数</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900" id="total-downloads">2,847</div>
+                            <div class="text-sm text-gray-500">总下载量</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900" id="storage-used">2.3GB</div>
+                            <div class="text-sm text-gray-500">已用空间</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900" id="linked-articles">89</div>
+                            <div class="text-sm text-gray-500">关联文章</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 文件列表内容 -->
+                <div class="p-6">
+                    <div id="file-list" class="space-y-2">
+                        <!-- 文件列表将通过JavaScript动态生成 -->
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <div class="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
+                        <div class="text-sm text-gray-500">
+                            显示 1-20 条，共 156 条记录
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">上一页</button>
+                            <button class="px-3 py-1 text-sm bg-purple-600 text-white rounded">1</button>
+                            <button class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">2</button>
+                            <button class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">3</button>
+                            <button class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 上传文件模态框 -->
+    <div id="upload-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-900">上传文件</h3>
+                <button onclick="hideUploadModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="file-upload-area" id="upload-area">
+                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                <p class="text-lg font-medium text-gray-700 mb-2">拖拽文件到此处或点击上传</p>
+                <p class="text-sm text-gray-500 mb-4">支持 PDF、DOC、PPT、ZIP、图片等格式，单个文件最大 50MB</p>
+                <input type="file" id="file-input" multiple class="hidden">
+                <button class="btn-primary px-6 py-2 rounded-lg" onclick="document.getElementById('file-input').click()">
+                    选择文件
+                </button>
+            </div>
+            
+            <div id="upload-progress" class="mt-6 hidden">
+                <div class="space-y-3" id="upload-list">
+                    <!-- 上传进度将动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化文件列表
+            initializeFileList();
+            
+            // 绑定搜索和筛选事件
+            bindSearchAndFilter();
+            
+            // 初始化拖拽上传
+            initializeDragUpload();
+        });
+        
+        // 模拟文件数据
+        const filesData = [
+            {
+                id: 1,
+                name: 'React开发指南.pdf',
+                type: 'pdf',
+                size: '2.5MB',
+                uploadDate: '2024-12-08',
+                downloads: 245,
+                linkedArticle: 'React Hooks 完全指南',
+                uploader: '张三'
+            },
+            {
+                id: 2,
+                name: '项目架构图.png',
+                type: 'image',
+                size: '1.2MB',
+                uploadDate: '2024-12-07',
+                downloads: 89,
+                linkedArticle: 'Vue 3 Composition API',
+                uploader: '李四'
+            },
+            {
+                id: 3,
+                name: '代码示例.zip',
+                type: 'archive',
+                size: '5.8MB',
+                uploadDate: '2024-12-06',
+                downloads: 156,
+                linkedArticle: 'TypeScript 高级类型',
+                uploader: '王五'
+            },
+            {
+                id: 4,
+                name: 'API文档.docx',
+                type: 'document',
+                size: '890KB',
+                uploadDate: '2024-12-05',
+                downloads: 67,
+                linkedArticle: 'Node.js 微服务架构',
+                uploader: '赵六'
+            },
+            {
+                id: 5,
+                name: '数据分析报告.xlsx',
+                type: 'document',
+                size: '3.2MB',
+                uploadDate: '2024-12-04',
+                downloads: 123,
+                linkedArticle: 'Python 数据分析',
+                uploader: '钱七'
+            }
+        ];
+        
+        function initializeFileList() {
+            renderFileList(filesData);
+        }
+        
+        function renderFileList(files) {
+            const container = document.getElementById('file-list');
+            const filesHTML = files.map(file => {
+                const iconClass = getFileIconClass(file.type);
+                return `
+                    <div class="file-item" data-file-id="${file.id}">
+                        <input type="checkbox" class="mr-3" onchange="toggleFileSelection(${file.id})">
+                        <div class="file-icon ${file.type}">
+                            <i class="${iconClass}"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm font-medium text-gray-900 truncate">${file.name}</div>
+                                <div class="flex items-center space-x-2 ml-4">
+                                    <button class="text-gray-400 hover:text-purple-600 transition-colors duration-300" onclick="downloadFile(${file.id})">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="text-gray-400 hover:text-blue-600 transition-colors duration-300" onclick="editFile(${file.id})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-gray-400 hover:text-red-600 transition-colors duration-300" onclick="deleteFile(${file.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500">
+                                <span>${file.size}</span>
+                                <span>${file.uploadDate}</span>
+                                <span>${file.downloads} 次下载</span>
+                                <span>关联：${file.linkedArticle}</span>
+                                <span>上传者：${file.uploader}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = filesHTML;
+        }
+        
+        function getFileIconClass(type) {
+            const iconMap = {
+                pdf: 'fas fa-file-pdf',
+                image: 'fas fa-image',
+                document: 'fas fa-file-word',
+                archive: 'fas fa-file-archive',
+                other: 'fas fa-file'
+            };
+            return iconMap[type] || iconMap.other;
+        }
+        
+        function bindSearchAndFilter() {
+            const searchInput = document.getElementById('search-input');
+            const typeFilter = document.getElementById('file-type-filter');
+            const sortBy = document.getElementById('sort-by');
+            
+            [searchInput, typeFilter, sortBy].forEach(element => {
+                element.addEventListener('change', filterAndSortFiles);
+                if (element === searchInput) {
+                    element.addEventListener('input', filterAndSortFiles);
+                }
+            });
+        }
+        
+        function filterAndSortFiles() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const typeFilter = document.getElementById('file-type-filter').value;
+            const sortBy = document.getElementById('sort-by').value;
+            
+            let filteredFiles = filesData.filter(file => {
+                const matchesSearch = file.name.toLowerCase().includes(searchTerm) ||
+                                    file.linkedArticle.toLowerCase().includes(searchTerm);
+                const matchesType = !typeFilter || file.type === typeFilter;
+                return matchesSearch && matchesType;
+            });
+            
+            // 排序
+            filteredFiles.sort((a, b) => {
+                switch (sortBy) {
+                    case 'name':
+                        return a.name.localeCompare(b.name);
+                    case 'size':
+                        return parseFloat(a.size) - parseFloat(b.size);
+                    case 'downloads':
+                        return b.downloads - a.downloads;
+                    case 'date':
+                    default:
+                        return new Date(b.uploadDate) - new Date(a.uploadDate);
+                }
+            });
+            
+            renderFileList(filteredFiles);
+        }
+        
+        function initializeDragUpload() {
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                handleFileUpload(files);
+            });
+            
+            fileInput.addEventListener('change', function(e) {
+                handleFileUpload(e.target.files);
+            });
+        }
+        
+        function handleFileUpload(files) {
+            const progressContainer = document.getElementById('upload-progress');
+            const uploadList = document.getElementById('upload-list');
+            
+            progressContainer.classList.remove('hidden');
+            
+            Array.from(files).forEach((file, index) => {
+                const progressItem = document.createElement('div');
+                progressItem.className = 'flex items-center space-x-3';
+                progressItem.innerHTML = `
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-900">${file.name}</div>
+                        <div class="progress-bar mt-1">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-500">${(file.size / 1024 / 1024).toFixed(1)}MB</div>
+                `;
+                
+                uploadList.appendChild(progressItem);
+                
+                // 模拟上传进度
+                simulateUploadProgress(progressItem.querySelector('.progress-fill'), index);
+            });
+        }
+        
+        function simulateUploadProgress(progressBar, delay) {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 20;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                }
+                progressBar.style.width = progress + '%';
+            }, 200 + delay * 100);
+        }
+        
+        // 用户菜单切换
+        function toggleUserMenu() {
+            const menu = document.getElementById('user-menu');
+            menu.classList.toggle('show');
+        }
+        
+        // 显示上传模态框
+        function showUploadModal() {
+            document.getElementById('upload-modal').classList.add('show');
+        }
+        
+        // 隐藏上传模态框
+        function hideUploadModal() {
+            document.getElementById('upload-modal').classList.remove('show');
+            document.getElementById('upload-progress').classList.add('hidden');
+            document.getElementById('upload-list').innerHTML = '';
+        }
+        
+        // 切换视图模式
+        function switchView(viewType) {
+            const gridBtn = document.getElementById('grid-view');
+            const listBtn = document.getElementById('list-view');
+            
+            if (viewType === 'grid') {
+                gridBtn.classList.add('text-purple-600');
+                gridBtn.classList.remove('text-gray-400');
+                listBtn.classList.add('text-gray-400');
+                listBtn.classList.remove('text-purple-600');
+                // 实现网格视图
+                console.log('切换到网格视图');
+            } else {
+                listBtn.classList.add('text-purple-600');
+                listBtn.classList.remove('text-gray-400');
+                gridBtn.classList.add('text-gray-400');
+                gridBtn.classList.remove('text-purple-600');
+                // 实现列表视图
+                console.log('切换到列表视图');
+            }
+        }
+        
+        // 文件操作函数
+        function toggleFileSelection(fileId) {
+            console.log('切换文件选择:', fileId);
+        }
+        
+        function downloadFile(fileId) {
+            console.log('下载文件:', fileId);
+            alert('开始下载文件...');
+        }
+        
+        function editFile(fileId) {
+            console.log('编辑文件:', fileId);
+            alert('编辑文件功能开发中...');
+        }
+        
+        function deleteFile(fileId) {
+            if (confirm('确定要删除这个文件吗？')) {
+                console.log('删除文件:', fileId);
+                alert('文件已删除');
+            }
+        }
+        
+        function batchDelete() {
+            const selectedFiles = document.querySelectorAll('input[type="checkbox"]:checked');
+            if (selectedFiles.length === 0) {
+                alert('请先选择要删除的文件');
+                return;
+            }
+            
+            if (confirm(`确定要删除选中的 ${selectedFiles.length} 个文件吗？`)) {
+                console.log('批量删除文件');
+                alert('文件已批量删除');
+            }
+        }
+        
+        // 点击外部关闭菜单
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('user-menu');
+            const button = e.target.closest('button');
+            if (!button || !button.onclick) {
+                menu.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据统计 - DocuVault 管理后台</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+            .nav-active {
+                @apply bg-purple-50 text-purple-600 border-r-2 border-purple-600;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .admin-sidebar {
+            width: 280px;
+            min-height: calc(100vh - 64px);
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            min-width: 160px;
+            z-index: 50;
+            display: none;
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+        }
+        
+        .trend-up {
+            color: #10b981;
+        }
+        
+        .trend-down {
+            color: #ef4444;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #9333ea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shield-alt text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                        <span class="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded">
+                            管理后台
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- 用户操作 -->
+                <div class="flex items-center space-x-4">
+                    <a href="首页页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        前台首页
+                    </a>
+                    <div class="relative">
+                        <button class="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors duration-300" onclick="toggleUserMenu()">
+                            <img class="w-8 h-8 rounded-full border-2 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="管理员头像">
+                            <span class="text-sm font-medium">管理员</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="user-menu" class="dropdown-menu">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">个人设置</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">修改密码</a>
+                            <hr class="my-1">
+                            <a href="后台管理登录.html" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">退出登录</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <div class="flex flex-1">
+        <!-- 侧边栏 -->
+        <aside class="admin-sidebar bg-white border-r border-gray-200 journal-shadow">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">管理功能</h3>
+                <nav class="space-y-2">
+                    <a href="后台文章管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-file-alt w-5 text-center"></i>
+                        <span>文章管理</span>
+                    </a>
+                    <a href="后台用户管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-users w-5 text-center"></i>
+                        <span>用户管理</span>
+                    </a>
+                    <a href="后台订单管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-shopping-cart w-5 text-center"></i>
+                        <span>订单管理</span>
+                    </a>
+                    <a href="后台合集管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-layer-group w-5 text-center"></i>
+                        <span>合集管理</span>
+                    </a>
+                    <a href="后台数据统计.html" class="nav-active flex items-center space-x-3 px-4 py-3 text-sm rounded-lg transition-colors duration-300">
+                        <i class="fas fa-chart-bar w-5 text-center"></i>
+                        <span>数据统计</span>
+                    </a>
+                    <a href="后台附件管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-paperclip w-5 text-center"></i>
+                        <span>附件管理</span>
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 p-6">
+            <!-- 页面标题和时间筛选 -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 font-serif">数据统计</h1>
+                    <p class="text-gray-600 mt-2">平台运营数据概览和趋势分析</p>
+                </div>
+                
+                <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                    <select id="time-range" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="today">今日</option>
+                        <option value="week">本周</option>
+                        <option value="month" selected>本月</option>
+                        <option value="quarter">本季度</option>
+                        <option value="year">本年</option>
+                    </select>
+                    
+                    <button class="btn-secondary px-4 py-2 rounded-lg text-sm" onclick="exportData()">
+                        <i class="fas fa-download mr-2"></i>导出数据
+                    </button>
+                    
+                    <button class="btn-primary px-4 py-2 rounded-lg text-sm" onclick="refreshData()">
+                        <i class="fas fa-sync-alt mr-2"></i>刷新
+                    </button>
+                </div>
+            </div>
+
+            <!-- 关键指标卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" data-component="metrics-cards">
+                <div class="metric-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm font-medium text-green-600 flex items-center">
+                            <i class="fas fa-arrow-up mr-1"></i>12.5%
+                        </span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900" id="total-users">2,847</div>
+                    <div class="text-sm text-gray-500">总用户数</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm font-medium text-green-600 flex items-center">
+                            <i class="fas fa-arrow-up mr-1"></i>8.3%
+                        </span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900" id="total-revenue">¥45,892</div>
+                    <div class="text-sm text-gray-500">总收入</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-file-alt text-purple-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm font-medium text-green-600 flex items-center">
+                            <i class="fas fa-arrow-up mr-1"></i>15.7%
+                        </span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900" id="total-articles">1,234</div>
+                    <div class="text-sm text-gray-500">发布文章</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-percentage text-amber-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm font-medium text-red-600 flex items-center">
+                            <i class="fas fa-arrow-down mr-1"></i>2.1%
+                        </span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900" id="conversion-rate">3.2%</div>
+                    <div class="text-sm text-gray-500">转化率</div>
+                </div>
+            </div>
+
+            <!-- 图表展示区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- 用户增长趋势 -->
+                <div class="bg-white rounded-lg journal-shadow p-6" data-component="user-growth-chart">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">用户增长趋势</h3>
+                        <div class="flex items-center space-x-2">
+                            <div class="loading-spinner hidden" id="user-chart-loading"></div>
+                            <button class="text-gray-400 hover:text-gray-600" onclick="refreshChart('userGrowthChart')">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="userGrowthChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 收入趋势 -->
+                <div class="bg-white rounded-lg journal-shadow p-6" data-component="revenue-chart">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">收入趋势</h3>
+                        <div class="flex items-center space-x-2">
+                            <div class="loading-spinner hidden" id="revenue-chart-loading"></div>
+                            <button class="text-gray-400 hover:text-gray-600" onclick="refreshChart('revenueChart')">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分布图表和排行榜 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- 用户分布 -->
+                <div class="bg-white rounded-lg journal-shadow p-6" data-component="user-distribution">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">用户分布</h3>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="userDistributionChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 热门文章排行 -->
+                <div class="bg-white rounded-lg journal-shadow p-6" data-component="popular-articles">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">热门文章排行</h3>
+                    <div class="space-y-4" id="popular-articles-list">
+                        <!-- 排行榜将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <!-- 活跃用户排行 -->
+                <div class="bg-white rounded-lg journal-shadow p-6" data-component="active-users">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">活跃用户排行</h3>
+                    <div class="space-y-4" id="active-users-list">
+                        <!-- 排行榜将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化图表
+            initializeCharts();
+            
+            // 初始化排行榜
+            initializeRankings();
+            
+            // 绑定时间筛选事件
+            document.getElementById('time-range').addEventListener('change', function() {
+                refreshAllData();
+            });
+        });
+        
+        let userGrowthChart, revenueChart, userDistributionChart;
+        
+        function initializeCharts() {
+            // 用户增长趋势图
+            const userCtx = document.getElementById('userGrowthChart').getContext('2d');
+            userGrowthChart = new Chart(userCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                    datasets: [{
+                        label: '新增用户',
+                        data: [120, 190, 300, 500, 200, 300, 450, 600, 750, 850, 900, 1000],
+                        borderColor: '#9333ea',
+                        backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f3f4f6'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 收入趋势图
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            revenueChart = new Chart(revenueCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                    datasets: [{
+                        label: '收入',
+                        data: [2400, 3200, 4100, 5500, 3800, 4200, 5100, 6200, 7100, 7800, 8200, 8900],
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f3f4f6'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 用户分布饼图
+            const distributionCtx = document.getElementById('userDistributionChart').getContext('2d');
+            userDistributionChart = new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['普通用户', '付费用户', '会员用户'],
+                    datasets: [{
+                        data: [65, 25, 10],
+                        backgroundColor: ['#e5e7eb', '#9333ea', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function initializeRankings() {
+            // 热门文章排行
+            const popularArticles = [
+                { title: 'React Hooks 完全指南', views: 12500, author: '张三' },
+                { title: 'Vue 3 Composition API', views: 9800, author: '李四' },
+                { title: 'TypeScript 高级类型', views: 8600, author: '王五' },
+                { title: 'Node.js 微服务架构', views: 7200, author: '赵六' },
+                { title: 'Python 数据分析', views: 6800, author: '钱七' }
+            ];
+            
+            const articlesHTML = popularArticles.map((article, index) => `
+                <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 rounded-full ${index < 3 ? 'bg-purple-600' : 'bg-gray-400'} text-white text-xs font-bold flex items-center justify-center">
+                        ${index + 1}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-gray-900 truncate">${article.title}</div>
+                        <div class="text-xs text-gray-500">作者：${article.author}</div>
+                    </div>
+                    <div class="text-sm font-medium text-gray-600">${article.views.toLocaleString()}</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('popular-articles-list').innerHTML = articlesHTML;
+            
+            // 活跃用户排行
+            const activeUsers = [
+                { name: '张小明', articles: 45, revenue: 12800 },
+                { name: '李小红', articles: 38, revenue: 9600 },
+                { name: '王小强', articles: 32, revenue: 8200 },
+                { name: '赵小美', articles: 28, revenue: 7100 },
+                { name: '钱小亮', articles: 25, revenue: 6500 }
+            ];
+            
+            const usersHTML = activeUsers.map((user, index) => `
+                <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 rounded-full ${index < 3 ? 'bg-amber-500' : 'bg-gray-400'} text-white text-xs font-bold flex items-center justify-center">
+                        ${index + 1}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-gray-900">${user.name}</div>
+                        <div class="text-xs text-gray-500">${user.articles}篇文章</div>
+                    </div>
+                    <div class="text-sm font-medium text-gray-600">¥${user.revenue.toLocaleString()}</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('active-users-list').innerHTML = usersHTML;
+        }
+        
+        // 用户菜单切换
+        function toggleUserMenu() {
+            const menu = document.getElementById('user-menu');
+            menu.classList.toggle('show');
+        }
+        
+        // 刷新数据
+        function refreshData() {
+            // 模拟数据刷新
+            console.log('刷新数据...');
+            
+            // 更新指标卡片
+            document.getElementById('total-users').textContent = (Math.random() * 1000 + 2500).toFixed(0);
+            document.getElementById('total-revenue').textContent = '¥' + (Math.random() * 10000 + 40000).toFixed(0);
+            document.getElementById('total-articles').textContent = (Math.random() * 500 + 1000).toFixed(0);
+            document.getElementById('conversion-rate').textContent = (Math.random() * 2 + 2).toFixed(1) + '%';
+            
+            alert('数据已刷新');
+        }
+        
+        // 刷新所有数据
+        function refreshAllData() {
+            const timeRange = document.getElementById('time-range').value;
+            console.log('切换时间范围:', timeRange);
+            
+            // 模拟根据时间范围更新数据
+            refreshData();
+        }
+        
+        // 刷新单个图表
+        function refreshChart(chartId) {
+            const loadingId = chartId.replace('Chart', '-chart-loading');
+            const loading = document.getElementById(loadingId);
+            
+            loading.classList.remove('hidden');
+            
+            setTimeout(() => {
+                loading.classList.add('hidden');
+                console.log('图表已刷新:', chartId);
+            }, 1000);
+        }
+        
+        // 导出数据
+        function exportData() {
+            // 模拟数据导出
+            const timeRange = document.getElementById('time-range').value;
+            console.log('导出数据，时间范围:', timeRange);
+            alert('数据导出功能开发中...');
+        }
+        
+        // 点击外部关闭菜单
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('user-menu');
+            const button = e.target.closest('button');
+            if (!button || !button.onclick) {
+                menu.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

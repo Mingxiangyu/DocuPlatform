@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内容合集 - DocuVault</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .journal-shadow-hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .collection-card {
+            transition: all 0.3s ease;
+        }
+        
+        .collection-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .collection-gradient-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .collection-gradient-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .collection-gradient-3 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .collection-gradient-4 {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .collection-gradient-5 {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .collection-gradient-6 {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        
+        .filter-tab {
+            @apply px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 cursor-pointer;
+        }
+        
+        .filter-tab-active {
+            @apply bg-purple-100 text-purple-700 border border-purple-300;
+        }
+        
+        .filter-tab-inactive {
+            @apply bg-white text-gray-600 border border-gray-200 hover:bg-purple-50 hover:text-purple-600;
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="首页页参考界面.html" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                    </a>
+                </div>
+                
+                <!-- 搜索栏 -->
+                <div class="flex-1 max-w-lg mx-8">
+                    <div class="relative">
+                        <input type="text" 
+                               placeholder="搜索合集..."
+                               id="search-collections"
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <!-- 用户操作 -->
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-600 hover:text-purple-600 transition-colors duration-300">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                    <button class="text-gray-600 hover:text-purple-600 transition-colors duration-300">
+                        <i class="fas fa-bookmark"></i>
+                    </button>
+                    <div class="relative">
+                        <button class="flex items-center space-x-2">
+                            <img class="w-8 h-8 rounded-full border-2 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="用户头像">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 页面标题 -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 font-serif mb-4">精选内容合集</h1>
+            <p class="text-xl text-gray-600">系统化学习路径，深度掌握专业技能</p>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg journal-shadow p-6 text-center">
+                <div class="text-3xl font-bold text-purple-600 mb-2" id="total-collections">12</div>
+                <div class="text-gray-600">精选合集</div>
+            </div>
+            <div class="bg-white rounded-lg journal-shadow p-6 text-center">
+                <div class="text-3xl font-bold text-green-600 mb-2" id="total-articles">156</div>
+                <div class="text-gray-600">包含文章</div>
+            </div>
+            <div class="bg-white rounded-lg journal-shadow p-6 text-center">
+                <div class="text-3xl font-bold text-amber-600 mb-2" id="total-authors">28</div>
+                <div class="text-gray-600">专业作者</div>
+            </div>
+            <div class="bg-white rounded-lg journal-shadow p-6 text-center">
+                <div class="text-3xl font-bold text-blue-600 mb-2" id="avg-discount">35%</div>
+                <div class="text-gray-600">平均优惠</div>
+            </div>
+        </div>
+
+        <!-- 筛选和排序 -->
+        <div class="bg-white rounded-lg journal-shadow p-6 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                <!-- 分类筛选 -->
+                <div class="flex flex-wrap gap-2">
+                    <span class="filter-tab filter-tab-active" data-category="all">
+                        全部合集 (12)
+                    </span>
+                    <span class="filter-tab filter-tab-inactive" data-category="frontend">
+                        前端开发 (4)
+                    </span>
+                    <span class="filter-tab filter-tab-inactive" data-category="backend">
+                        后端开发 (3)
+                    </span>
+                    <span class="filter-tab filter-tab-inactive" data-category="design">
+                        设计 (2)
+                    </span>
+                    <span class="filter-tab filter-tab-inactive" data-category="data">
+                        数据科学 (3)
+                    </span>
+                </div>
+                
+                <!-- 排序选项 -->
+                <div class="flex items-center space-x-4">
+                    <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent" id="sort-collections">
+                        <option value="popular">最受欢迎</option>
+                        <option value="newest">最新发布</option>
+                        <option value="price-low">价格从低到高</option>
+                        <option value="price-high">价格从高到低</option>
+                        <option value="articles">文章数量</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 合集列表 -->
+        <div id="collections-container">
+            <!-- 合集列表将通过JavaScript动态加载 -->
+        </div>
+        
+        <!-- 加载更多 -->
+        <div class="text-center mt-8">
+            <button class="btn-secondary px-6 py-3 rounded-lg" id="load-more">
+                <i class="fas fa-plus mr-2"></i>
+                加载更多合集
+            </button>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 合集数据
+            const collectionsData = [
+                {
+                    id: 1,
+                    title: 'React 全栈开发完整指南',
+                    description: '从 React 基础到高级应用，包含 Hooks、状态管理、性能优化等核心内容，适合进阶学习。',
+                    category: 'frontend',
+                    categoryName: '前端开发',
+                    gradient: 'collection-gradient-1',
+                    articleCount: 12,
+                    totalPrice: 358.8,
+                    bundlePrice: 199.9,
+                    discount: 44,
+                    author: '张三',
+                    authorAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face',
+                    publishDate: '2024-12-01',
+                    subscribers: 1234,
+                    rating: 4.8,
+                    reviews: 156,
+                    image: 'https://picsum.photos/600/400?random=1',
+                    tags: ['React', 'JavaScript', 'Hooks', '状态管理'],
+                    level: 'intermediate',
+                    duration: '8-12周',
+                    completionRate: 85
+                },
+                {
+                    id: 2,
+                    title: 'Python 数据科学实战',
+                    description: '涵盖数据分析、机器学习、深度学习的完整学习路径，包含实际项目案例。',
+                    category: 'data',
+                    categoryName: '数据科学',
+                    gradient: 'collection-gradient-2',
+                    articleCount: 15,
+                    totalPrice: 449.5,
+                    bundlePrice: 299.9,
+                    discount: 33,
+                    author: '李四',
+                    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face',
+                    publishDate: '2024-11-28',
+                    subscribers: 987,
+                    rating: 4.9,
+                    reviews: 203,
+                    image: 'https://picsum.photos/600/400?random=2',
+                    tags: ['Python', '数据分析', '机器学习', 'Pandas'],
+                    level: 'beginner',
+                    duration: '10-14周',
+                    completionRate: 78
+                },
+                {
+                    id: 3,
+                    title: 'Node.js 后端开发精通',
+                    description: '深入学习 Node.js 生态系统，包含 Express、数据库、微服务架构等内容。',
+                    category: 'backend',
+                    categoryName: '后端开发',
+                    gradient: 'collection-gradient-3',
+                    articleCount: 10,
+                    totalPrice: 299.0,
+                    bundlePrice: 189.9,
+                    discount: 36,
+                    author: '王五',
+                    authorAvatar: 'https://images.unsplash.com/photo-1546961329-78bef0414d7c?w=64&h=64&fit=crop&crop=face',
+                    publishDate: '2024-11-25',
+                    subscribers: 756,
+                    rating: 4.7,
+                    reviews: 89,
+                    image: 'https://picsum.photos/600/400?random=3',
+                    tags: ['Node.js', 'Express', '数据库', 'API'],
+                    level: 'intermediate',
+                    duration: '6-8周',
+                    completionRate: 92
+                },
+                {
+                    id: 4,
+                    title: 'UI/UX 设计系统构建',
+                    description: '学习现代设计系统的构建方法，包含设计原则、组件库、设计规范等。',
+                    category: 'design',
+                    categoryName: '设计',
+                    gradient: 'collection-gradient-4',
+                    articleCount: 8,
+                    totalPrice: 239.2,
+                    bundlePrice: 149.9,
+                    discount: 37,
+                    author: '赵六',
+                    authorAvatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=64&h=64&fit=crop&crop=face',
+                    publishDate: '2024-11-20',
+                    subscribers: 543,
+                    rating: 4.6,
+                    reviews: 67,
+                    image: 'https://picsum.photos/600/400?random=4',
+                    tags: ['UI', 'UX', '设计系统', 'Figma'],
+                    level: 'beginner',
+                    duration: '4-6周',
+                    completionRate: 88
+                }
+            ];
+
+            let currentCategory = 'all';
+            let currentSort = 'popular';
+            let searchTerm = '';
+
+            // 渲染合集列表
+            function renderCollections(collections) {
+                const container = document.getElementById('collections-container');
+
+                if (collections.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-16">
+                            <div class="w-24 h-24 mx-auto mb-4 text-gray-300">
+                                <i class="fas fa-layer-group text-6xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">暂无合集</h3>
+                            <p class="text-gray-600">没有找到符合条件的内容合集</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const collectionsHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        ${collections.map(collection => `
+                            <a href="合集详情页.html?id=${collection.id}" class="collection-card bg-white rounded-xl journal-shadow overflow-hidden block" data-component="collection-card" data-collection-id="${collection.id}">
+                                <!-- 合集头部 -->
+                                <div class="${collection.gradient} p-6 text-white relative overflow-hidden">
+                                    <div class="relative z-10">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <span class="text-xs font-medium bg-white bg-opacity-20 px-2 py-1 rounded">
+                                                ${collection.categoryName}
+                                            </span>
+                                            <div class="flex items-center space-x-1">
+                                                <i class="fas fa-star text-yellow-300"></i>
+                                                <span class="text-sm font-medium">${collection.rating}</span>
+                                            </div>
+                                        </div>
+
+                                        <h3 class="text-xl font-bold mb-2 line-clamp-2">${collection.title}</h3>
+                                        <p class="text-white text-opacity-90 text-sm line-clamp-2">${collection.description}</p>
+                                    </div>
+                                    <div class="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full transform translate-x-8 -translate-y-8"></div>
+                                </div>
+
+                                <!-- 合集信息 -->
+                                <div class="p-6">
+                                    <!-- 作者信息 -->
+                                    <div class="flex items-center space-x-3 mb-4">
+                                        <img class="w-10 h-10 rounded-full" src="${collection.authorAvatar}" alt="${collection.author}">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">${collection.author}</div>
+                                            <div class="text-xs text-gray-500">${collection.publishDate}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 统计信息 -->
+                                    <div class="grid grid-cols-2 gap-4 mb-4 text-sm text-gray-600">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-file-alt mr-2 text-purple-500"></i>
+                                            ${collection.articleCount} 篇文章
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-users mr-2 text-green-500"></i>
+                                            ${collection.subscribers} 人订阅
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-clock mr-2 text-blue-500"></i>
+                                            ${collection.duration}
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-chart-line mr-2 text-amber-500"></i>
+                                            ${collection.completionRate}% 完成率
+                                        </div>
+                                    </div>
+
+                                    <!-- 难度等级 -->
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-sm text-gray-600">难度：</span>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                                collection.level === 'beginner' ? 'bg-green-100 text-green-700' :
+                                                collection.level === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                                                'bg-red-100 text-red-700'
+                                            }">
+                                                ${collection.level === 'beginner' ? '初级' : collection.level === 'intermediate' ? '中级' : '高级'}
+                                            </span>
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            ${collection.reviews} 条评价
+                                        </div>
+                                    </div>
+
+                                    <!-- 价格信息 -->
+                                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-sm text-gray-600">单独购买</span>
+                                            <span class="text-sm text-gray-500 line-through">¥${collection.totalPrice}</span>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm font-medium text-gray-900">合集优惠价</span>
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-lg font-bold text-purple-600">¥${collection.bundlePrice}</span>
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                                    省${collection.discount}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 标签 -->
+                                    <div class="flex flex-wrap gap-2 mb-4">
+                                        ${collection.tags.map(tag => `
+                                            <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                                                ${tag}
+                                            </span>
+                                        `).join('')}
+                                    </div>
+
+                                    <!-- 操作按钮 -->
+                                    <div class="space-y-2">
+                                        <button class="w-full btn-primary py-3 px-4 rounded-lg text-sm font-medium" onclick="event.preventDefault(); window.open('支付弹窗.html', 'payment', 'width=600,height=700,scrollbars=yes,resizable=yes');">
+                                            <i class="fas fa-shopping-cart mr-2"></i>
+                                            立即购买
+                                        </button>
+                                        <div class="flex space-x-2">
+                                            <button class="flex-1 btn-secondary py-2 px-3 rounded-lg text-sm">
+                                                <i class="fas fa-eye mr-1"></i>
+                                                预览
+                                            </button>
+                                            <button class="flex-1 btn-secondary py-2 px-3 rounded-lg text-sm">
+                                                <i class="fas fa-heart mr-1"></i>
+                                                收藏
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                `;
+
+                container.innerHTML = collectionsHTML;
+            }
+
+            // 显示加载状态
+            function showLoadingState() {
+                const container = document.getElementById('collections-container');
+                const skeletonHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        ${Array(6).fill().map(() => `
+                            <div class="bg-white rounded-xl journal-shadow overflow-hidden">
+                                <div class="skeleton h-32 bg-gray-200"></div>
+                                <div class="p-6">
+                                    <div class="skeleton h-4 bg-gray-200 rounded mb-3 w-1/3"></div>
+                                    <div class="skeleton h-6 bg-gray-200 rounded mb-3 w-3/4"></div>
+                                    <div class="skeleton h-4 bg-gray-200 rounded mb-4 w-full"></div>
+                                    <div class="skeleton h-16 bg-gray-200 rounded mb-4 w-full"></div>
+                                    <div class="skeleton h-8 bg-gray-200 rounded w-full"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                container.innerHTML = skeletonHTML;
+            }
+
+            // 筛选和排序合集
+            function filterAndSortCollections() {
+                let filtered = [...collectionsData];
+
+                // 按分类筛选
+                if (currentCategory !== 'all') {
+                    filtered = filtered.filter(collection => collection.category === currentCategory);
+                }
+
+                // 按搜索词筛选
+                if (searchTerm) {
+                    filtered = filtered.filter(collection =>
+                        collection.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        collection.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        collection.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        collection.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+                    );
+                }
+
+                // 排序
+                filtered.sort((a, b) => {
+                    if (currentSort === 'popular') {
+                        return b.subscribers - a.subscribers;
+                    } else if (currentSort === 'newest') {
+                        return new Date(b.publishDate) - new Date(a.publishDate);
+                    } else if (currentSort === 'price-low') {
+                        return a.bundlePrice - b.bundlePrice;
+                    } else if (currentSort === 'price-high') {
+                        return b.bundlePrice - a.bundlePrice;
+                    } else if (currentSort === 'articles') {
+                        return b.articleCount - a.articleCount;
+                    }
+                    return 0;
+                });
+
+                return filtered;
+            }
+
+            // 更新筛选标签状态
+            function updateFilterTabs() {
+                const filterTabs = document.querySelectorAll('.filter-tab');
+                filterTabs.forEach(tab => {
+                    const category = tab.dataset.category;
+                    if (category === currentCategory) {
+                        tab.className = 'filter-tab filter-tab-active';
+                    } else {
+                        tab.className = 'filter-tab filter-tab-inactive';
+                    }
+                });
+            }
+
+            // 更新视图
+            function updateView() {
+                showLoadingState();
+
+                setTimeout(() => {
+                    const filtered = filterAndSortCollections();
+                    renderCollections(filtered);
+                }, 500);
+            }
+
+            // 事件监听器
+
+            // 分类筛选
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    currentCategory = this.dataset.category;
+                    updateFilterTabs();
+                    updateView();
+                });
+            });
+
+            // 排序选择
+            document.getElementById('sort-collections').addEventListener('change', function() {
+                currentSort = this.value;
+                updateView();
+            });
+
+            // 搜索功能
+            const searchInput = document.getElementById('search-collections');
+            searchInput.addEventListener('input', function() {
+                searchTerm = this.value.trim();
+
+                // 防抖处理
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    updateView();
+                }, 500);
+            });
+
+            // 加载更多
+            document.getElementById('load-more').addEventListener('click', function() {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>加载中...';
+                this.disabled = true;
+
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-plus mr-2"></i>加载更多合集';
+                    this.disabled = false;
+                }, 1500);
+            });
+
+            // 初始化页面
+            updateFilterTabs();
+            updateView();
+        });
+    </script>
+</body>
+</html>

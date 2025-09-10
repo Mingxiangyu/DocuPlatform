@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商业计划书生成器 - DocuVault 工具</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .tool-workspace {
+            min-height: calc(100vh - 80px);
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .form-section:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f3e8ff;
+        }
+        
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 12px;
+        }
+        
+        .auto-save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        
+        .auto-save-indicator.show {
+            display: flex;
+        }
+        
+        .auto-save-indicator.saving {
+            color: #f59e0b;
+        }
+        
+        .auto-save-indicator.saved {
+            color: #10b981;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #a855f7, #7c3aed);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .export-preview {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .floating-toolbar {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            z-index: 1000;
+        }
+        
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .step-dot.active {
+            background: #a855f7;
+            color: white;
+        }
+        
+        .step-dot.completed {
+            background: #10b981;
+            color: white;
+        }
+        
+        .step-dot.pending {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+        
+        .step-line {
+            flex: 1;
+            height: 2px;
+            background: #e5e7eb;
+            position: relative;
+        }
+        
+        .step-line.completed::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: #10b981;
+        }
+        
+        .tool-tip {
+            background: #1f2937;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 8px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .tool-tip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: #1f2937;
+        }
+        
+        .has-tooltip:hover .tool-tip {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- 返回文章链接 -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="returnToArticle()" class="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors duration-300">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>返回文章：《创业公司商业计划书撰写指南》</span>
+                    </button>
+                </div>
+                
+                <!-- 工具信息 -->
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-600">
+                        <i class="fas fa-tools mr-1"></i>
+                        商业计划书生成器
+                    </div>
+                    
+                    <!-- 进度指示器 -->
+                    <div class="hidden md:flex items-center space-x-2">
+                        <span class="text-xs text-gray-500">完成度:</span>
+                        <div class="progress-bar w-20">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <span class="text-xs text-gray-600" id="progress-text">0%</span>
+                    </div>
+                </div>
+
+                <!-- 第三步：商业模式 -->
+                <div class="form-section" data-step="3">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">商业模式</h3>
+                            <p class="text-sm text-gray-600">描述您的盈利模式和运营策略</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">核心产品/服务 *</label>
+                            <textarea id="core-product"
+                                      rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                      placeholder="详细描述您的核心产品或服务"
+                                      oninput="autoSave(); updateProgress()"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">盈利模式 *</label>
+                            <textarea id="revenue-model"
+                                      rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                      placeholder="说明如何通过产品/服务获得收入"
+                                      oninput="autoSave(); updateProgress()"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">预期年收入</label>
+                                <input type="text"
+                                       id="projected-revenue"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                       placeholder="例如：1000万元"
+                                       oninput="autoSave(); updateProgress()">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">盈利周期</label>
+                                <select id="profitability-timeline"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        onchange="autoSave(); updateProgress()">
+                                    <option value="">请选择盈利周期</option>
+                                    <option value="6months">6个月内</option>
+                                    <option value="1year">1年内</option>
+                                    <option value="2years">2年内</option>
+                                    <option value="3years">3年内</option>
+                                    <option value="3years+">3年以上</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第四步：融资需求 -->
+                <div class="form-section" data-step="4">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">融资需求</h3>
+                            <p class="text-sm text-gray-600">说明您的资金需求和使用计划</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">融资金额 *</label>
+                                <input type="text"
+                                       id="funding-amount"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                       placeholder="例如：500万元"
+                                       oninput="autoSave(); updateProgress()">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">融资轮次</label>
+                                <select id="funding-round"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        onchange="autoSave(); updateProgress()">
+                                    <option value="">请选择融资轮次</option>
+                                    <option value="seed">种子轮</option>
+                                    <option value="angel">天使轮</option>
+                                    <option value="pre-a">Pre-A轮</option>
+                                    <option value="a">A轮</option>
+                                    <option value="b">B轮</option>
+                                    <option value="c">C轮及以后</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">资金用途 *</label>
+                            <textarea id="fund-usage"
+                                      rows="4"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                      placeholder="详细说明融资资金的具体用途和分配比例"
+                                      oninput="autoSave(); updateProgress()"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">投资回报预期</label>
+                            <textarea id="roi-expectation"
+                                      rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                      placeholder="说明投资者可能获得的回报和退出机制"
+                                      oninput="autoSave(); updateProgress()"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：预览和导出 -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-24">
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">文档预览</h3>
+                                <p class="text-sm text-gray-600">实时预览生成的商业计划书</p>
+                            </div>
+                        </div>
+
+                        <div class="export-preview" id="document-preview">
+                            <i class="fas fa-file-alt text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-600 mb-2">开始填写信息</p>
+                            <p class="text-sm text-gray-500">文档将实时生成预览</p>
+                        </div>
+
+                        <div class="mt-6 space-y-3">
+                            <button class="w-full btn-primary py-3 px-4 rounded-lg" onclick="generatePreview()" disabled id="preview-btn">
+                                <i class="fas fa-eye mr-2"></i>
+                                生成预览
+                            </button>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <button class="btn-secondary py-2 px-3 rounded-lg text-sm" onclick="exportToPDF()" disabled id="pdf-btn">
+                                    <i class="fas fa-file-pdf mr-1"></i>
+                                    导出PDF
+                                </button>
+
+                                <button class="btn-secondary py-2 px-3 rounded-lg text-sm" onclick="exportToWord()" disabled id="word-btn">
+                                    <i class="fas fa-file-word mr-1"></i>
+                                    导出Word
+                                </button>
+                            </div>
+
+                            <button class="w-full btn-secondary py-2 px-3 rounded-lg text-sm" onclick="saveTemplate()">
+                                <i class="fas fa-save mr-1"></i>
+                                保存为模板
+                            </button>
+                        </div>
+
+                        <!-- 使用提示 -->
+                        <div class="mt-6 p-4 bg-purple-50 rounded-lg">
+                            <h4 class="text-sm font-medium text-purple-900 mb-2">
+                                <i class="fas fa-lightbulb mr-1"></i>
+                                使用提示
+                            </h4>
+                            <ul class="text-xs text-purple-700 space-y-1">
+                                <li>• 标有 * 的字段为必填项</li>
+                                <li>• 数据会自动保存，无需担心丢失</li>
+                                <li>• 可随时返回文章继续学习</li>
+                                <li>• 生成的文档可多次导出</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 浮动工具栏 -->
+    <div class="floating-toolbar">
+        <button class="has-tooltip relative p-3 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-300" onclick="clearForm()">
+            <i class="fas fa-trash-alt"></i>
+            <div class="tool-tip">清空表单</div>
+        </button>
+
+        <button class="has-tooltip relative p-3 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-300" onclick="loadTemplate()">
+            <i class="fas fa-folder-open"></i>
+            <div class="tool-tip">加载模板</div>
+        </button>
+
+        <button class="has-tooltip relative p-3 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-300" onclick="shareForm()">
+            <i class="fas fa-share-alt"></i>
+            <div class="tool-tip">分享链接</div>
+        </button>
+
+        <button class="has-tooltip relative p-3 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-300" onclick="getHelp()">
+            <i class="fas fa-question-circle"></i>
+            <div class="tool-tip">获取帮助</div>
+        </button>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        let autoSaveTimer;
+        let formData = {};
+
+        // 自动保存功能
+        function autoSave() {
+            clearTimeout(autoSaveTimer);
+
+            const indicator = document.getElementById('auto-save-indicator');
+            indicator.classList.add('show', 'saving');
+            indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>保存中...</span>';
+
+            // 收集表单数据
+            collectFormData();
+
+            autoSaveTimer = setTimeout(() => {
+                // 模拟API调用保存数据
+                localStorage.setItem('business_plan_data', JSON.stringify(formData));
+
+                indicator.classList.remove('saving');
+                indicator.classList.add('saved');
+                indicator.innerHTML = '<i class="fas fa-check-circle"></i><span>已自动保存</span>';
+
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                }, 2000);
+            }, 1000);
+        }
+
+        // 收集表单数据
+        function collectFormData() {
+            const fields = [
+                'company-name', 'industry', 'company-description', 'founded-date', 'team-size',
+                'target-market', 'competition-analysis', 'market-size', 'market-share',
+                'core-product', 'revenue-model', 'projected-revenue', 'profitability-timeline',
+                'funding-amount', 'funding-round', 'fund-usage', 'roi-expectation'
+            ];
+
+            fields.forEach(field => {
+                const element = document.getElementById(field);
+                if (element) {
+                    formData[field] = element.value;
+                }
+            });
+        }
+
+        // 更新进度
+        function updateProgress() {
+            const requiredFields = [
+                'company-name', 'industry', 'company-description',
+                'target-market', 'competition-analysis',
+                'core-product', 'revenue-model',
+                'funding-amount', 'fund-usage'
+            ];
+
+            let filledFields = 0;
+            requiredFields.forEach(field => {
+                const element = document.getElementById(field);
+                if (element && element.value.trim()) {
+                    filledFields++;
+                }
+            });
+
+            const progress = Math.round((filledFields / requiredFields.length) * 100);
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+
+            progressFill.style.width = progress + '%';
+            progressText.textContent = progress + '%';
+
+            // 更新步骤指示器
+            updateStepIndicator(progress);
+
+            // 启用/禁用按钮
+            const previewBtn = document.getElementById('preview-btn');
+            const pdfBtn = document.getElementById('pdf-btn');
+            const wordBtn = document.getElementById('word-btn');
+
+            if (progress >= 50) {
+                previewBtn.disabled = false;
+                previewBtn.classList.remove('opacity-50');
+            }
+
+            if (progress >= 80) {
+                pdfBtn.disabled = false;
+                wordBtn.disabled = false;
+                pdfBtn.classList.remove('opacity-50');
+                wordBtn.classList.remove('opacity-50');
+            }
+        }
+
+        // 更新步骤指示器
+        function updateStepIndicator(progress) {
+            const steps = document.querySelectorAll('.step-dot');
+            const lines = document.querySelectorAll('.step-line');
+
+            steps.forEach((step, index) => {
+                const stepProgress = (index + 1) * 25;
+
+                if (progress >= stepProgress) {
+                    step.className = 'step-dot completed';
+                } else if (progress >= stepProgress - 25) {
+                    step.className = 'step-dot active';
+                } else {
+                    step.className = 'step-dot pending';
+                }
+            });
+
+            lines.forEach((line, index) => {
+                const lineProgress = (index + 1) * 25;
+                if (progress >= lineProgress) {
+                    line.classList.add('completed');
+                } else {
+                    line.classList.remove('completed');
+                }
+            });
+        }
+
+        // 生成预览
+        function generatePreview() {
+            collectFormData();
+
+            const preview = document.getElementById('document-preview');
+            preview.innerHTML = `
+                <div class="text-left space-y-3">
+                    <h4 class="font-semibold text-gray-900">${formData['company-name'] || '公司名称'}</h4>
+                    <p class="text-sm text-gray-600">商业计划书</p>
+                    <div class="text-xs text-gray-500 space-y-1">
+                        <p>• 行业：${formData['industry'] || '未填写'}</p>
+                        <p>• 融资需求：${formData['funding-amount'] || '未填写'}</p>
+                        <p>• 团队规模：${formData['team-size'] || '未填写'}</p>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-200">
+                        <p class="text-xs text-green-600">
+                            <i class="fas fa-check mr-1"></i>
+                            预览已生成
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 导出PDF
+        function exportToPDF() {
+            collectFormData();
+            // 这里应该调用API生成PDF
+            alert('PDF文档正在生成，请稍候...');
+
+            // 模拟下载
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = '#';
+                link.download = `${formData['company-name'] || '商业计划书'}.pdf`;
+                link.click();
+            }, 2000);
+        }
+
+        // 导出Word
+        function exportToWord() {
+            collectFormData();
+            // 这里应该调用API生成Word文档
+            alert('Word文档正在生成，请稍候...');
+        }
+
+        // 保存模板
+        function saveTemplate() {
+            collectFormData();
+            const templateName = prompt('请输入模板名称：');
+            if (templateName) {
+                localStorage.setItem(`template_${templateName}`, JSON.stringify(formData));
+                alert('模板已保存！');
+            }
+        }
+
+        // 返回文章
+        function returnToArticle() {
+            if (confirm('确定要返回文章吗？当前数据已自动保存。')) {
+                window.close();
+                // 如果无法关闭窗口，则跳转回文章页面
+                setTimeout(() => {
+                    window.location.href = '文章预览.html';
+                }, 100);
+            }
+        }
+
+        // 清空表单
+        function clearForm() {
+            if (confirm('确定要清空所有数据吗？此操作不可恢复。')) {
+                document.querySelectorAll('input, select, textarea').forEach(element => {
+                    element.value = '';
+                });
+                formData = {};
+                updateProgress();
+                localStorage.removeItem('business_plan_data');
+            }
+        }
+
+        // 加载模板
+        function loadTemplate() {
+            // 这里可以实现模板选择和加载功能
+            alert('模板加载功能开发中...');
+        }
+
+        // 分享表单
+        function shareForm() {
+            const shareUrl = window.location.href;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('分享链接已复制到剪贴板！');
+            });
+        }
+
+        // 获取帮助
+        function getHelp() {
+            window.open('https://help.docuvault.com/business-plan-generator', '_blank');
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载保存的数据
+            const savedData = localStorage.getItem('business_plan_data');
+            if (savedData) {
+                formData = JSON.parse(savedData);
+
+                // 填充表单
+                Object.keys(formData).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = formData[key];
+                    }
+                });
+
+                updateProgress();
+            }
+
+            // 初始化按钮状态
+            document.getElementById('preview-btn').classList.add('opacity-50');
+            document.getElementById('pdf-btn').classList.add('opacity-50');
+            document.getElementById('word-btn').classList.add('opacity-50');
+
+            // 监听页面关闭事件
+            window.addEventListener('beforeunload', function(e) {
+                autoSave();
+            });
+        });
+    </script>
+</body>
+</html>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 自动保存指示器 -->
+    <div class="auto-save-indicator" id="auto-save-indicator">
+        <i class="fas fa-check-circle"></i>
+        <span>已自动保存</span>
+    </div>
+
+    <!-- 主要工作区域 -->
+    <main class="tool-workspace max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 工具标题和说明 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 font-serif mb-4">商业计划书生成器</h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                通过填写以下信息，我们将为您生成一份专业的商业计划书。所有数据将自动保存，您可以随时返回继续编辑。
+            </p>
+        </div>
+
+        <!-- 步骤指示器 -->
+        <div class="step-indicator justify-center mb-8">
+            <div class="step-dot active" data-step="1">1</div>
+            <div class="step-line"></div>
+            <div class="step-dot pending" data-step="2">2</div>
+            <div class="step-line"></div>
+            <div class="step-dot pending" data-step="3">3</div>
+            <div class="step-line"></div>
+            <div class="step-dot pending" data-step="4">4</div>
+        </div>
+
+        <!-- 表单区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 左侧：表单输入 -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- 第一步：基本信息 -->
+                <div class="form-section" data-step="1">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">基本信息</h3>
+                            <p class="text-sm text-gray-600">填写您的公司基本信息</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">公司名称 *</label>
+                            <input type="text" 
+                                   id="company-name"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                   placeholder="请输入公司名称"
+                                   oninput="autoSave(); updateProgress()">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">所属行业 *</label>
+                            <select id="industry" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    onchange="autoSave(); updateProgress()">
+                                <option value="">请选择行业</option>
+                                <option value="tech">科技互联网</option>
+                                <option value="finance">金融服务</option>
+                                <option value="education">教育培训</option>
+                                <option value="healthcare">医疗健康</option>
+                                <option value="retail">零售电商</option>
+                                <option value="manufacturing">制造业</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">公司简介 *</label>
+                            <textarea id="company-description" 
+                                      rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                      placeholder="简要描述您的公司业务和核心价值主张"
+                                      oninput="autoSave(); updateProgress()"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">成立时间</label>
+                            <input type="date" 
+                                   id="founded-date"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                   onchange="autoSave(); updateProgress()">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">团队规模</label>
+                            <select id="team-size" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    onchange="autoSave(); updateProgress()">
+                                <option value="">请选择团队规模</option>
+                                <option value="1-5">1-5人</option>
+                                <option value="6-20">6-20人</option>
+                                <option value="21-50">21-50人</option>
+                                <option value="51-100">51-100人</option>
+                                <option value="100+">100人以上</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第二步：市场分析 -->
+                <div class="form-section" data-step="2">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">市场分析</h3>
+                            <p class="text-sm text-gray-600">分析您的目标市场和竞争环境</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">目标市场 *</label>
+                            <textarea id="target-market" 
+                                      rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                      placeholder="描述您的目标客户群体和市场规模"
+                                      oninput="autoSave(); updateProgress()"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">竞争分析 *</label>
+                            <textarea id="competition-analysis" 
+                                      rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                      placeholder="分析主要竞争对手和您的竞争优势"
+                                      oninput="autoSave(); updateProgress()"></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">市场规模估算</label>
+                                <input type="text" 
+                                       id="market-size"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                       placeholder="例如：100亿元人民币"
+                                       oninput="autoSave(); updateProgress()">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">预期市场份额</label>
+                                <input type="text" 
+                                       id="market-share"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                       placeholder="例如：5%"
+                                       oninput="autoSave(); updateProgress()">
+                            </div>
+                        </div>
+                    </div>
+                </div>

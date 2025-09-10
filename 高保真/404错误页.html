@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面未找到 - DocuVault</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .error-illustration {
+            background: linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%);
+            border-radius: 20px;
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .error-illustration::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .error-number {
+            font-size: 8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            text-shadow: 0 4px 8px rgba(168, 85, 247, 0.3);
+        }
+        
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        
+        .floating-element {
+            position: absolute;
+            color: rgba(168, 85, 247, 0.3);
+            animation: float 4s ease-in-out infinite;
+        }
+        
+        .floating-element:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .floating-element:nth-child(2) {
+            top: 60%;
+            right: 15%;
+            animation-delay: 1s;
+        }
+        
+        .floating-element:nth-child(3) {
+            bottom: 30%;
+            left: 20%;
+            animation-delay: 2s;
+        }
+        
+        .floating-element:nth-child(4) {
+            top: 40%;
+            right: 30%;
+            animation-delay: 3s;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+        }
+        
+        .search-suggestion {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .search-suggestion:hover {
+            border-color: #a855f7;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .article-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        
+        .article-card:hover {
+            border-color: #a855f7;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .breadcrumb a {
+            color: #6b7280;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .breadcrumb a:hover {
+            color: #a855f7;
+        }
+        
+        .breadcrumb .separator {
+            color: #d1d5db;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="首页页参考界面.html" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                    </a>
+                </div>
+                
+                <!-- 导航链接 -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="首页页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        首页
+                    </a>
+                    <a href="文章列表页.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        文章
+                    </a>
+                    <a href="内容合集.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        合集
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        关于
+                    </a>
+                </div>
+                
+                <!-- 用户操作 -->
+                <div class="flex items-center space-x-4">
+                    <a href="邮箱登录.html" class="btn-secondary px-4 py-2 rounded-lg text-sm">
+                        登录
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- 面包屑导航 -->
+        <div class="breadcrumb">
+            <a href="首页页参考界面.html">
+                <i class="fas fa-home"></i>
+                首页
+            </a>
+            <span class="separator">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </span>
+            <span class="text-gray-900">页面未找到</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <!-- 左侧：错误信息 -->
+            <div class="text-center lg:text-left">
+                <div class="error-illustration relative mb-8">
+                    <div class="floating-elements">
+                        <div class="floating-element">
+                            <i class="fas fa-search text-2xl"></i>
+                        </div>
+                        <div class="floating-element">
+                            <i class="fas fa-compass text-xl"></i>
+                        </div>
+                        <div class="floating-element">
+                            <i class="fas fa-map text-lg"></i>
+                        </div>
+                        <div class="floating-element">
+                            <i class="fas fa-route text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <div class="error-number">404</div>
+                        <div class="text-2xl font-bold text-gray-900 mb-2">页面走丢了</div>
+                        <div class="text-gray-600">
+                            看起来您正在探索未知的知识领域
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-900 mb-3">可能的原因：</h2>
+                        <ul class="text-gray-600 space-y-2">
+                            <li class="flex items-center">
+                                <i class="fas fa-circle text-purple-400 text-xs mr-3"></i>
+                                页面链接已过期或被移动
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-circle text-purple-400 text-xs mr-3"></i>
+                                输入的网址有误
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-circle text-purple-400 text-xs mr-3"></i>
+                                您没有访问此页面的权限
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button onclick="goBack()" class="btn-secondary px-6 py-3 rounded-lg">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            返回上页
+                        </button>
+                        <a href="首页页参考界面.html" class="btn-primary px-6 py-3 rounded-lg text-center">
+                            <i class="fas fa-home mr-2"></i>
+                            回到首页
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：搜索和推荐 -->
+            <div class="space-y-8">
+                <!-- 搜索建议 -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">试试搜索您需要的内容</h3>
+                    
+                    <div class="relative mb-6">
+                        <input type="text" 
+                               id="search-input"
+                               placeholder="搜索文章、合集..."
+                               class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300">
+                        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <button class="absolute right-3 top-1/2 transform -translate-y-1/2 btn-primary px-4 py-1 rounded text-sm">
+                            搜索
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="search-suggestion" onclick="searchFor('创业指南')">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-rocket text-purple-500"></i>
+                                <span class="text-sm font-medium">创业指南</span>
+                            </div>
+                        </div>
+                        
+                        <div class="search-suggestion" onclick="searchFor('技术管理')">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-cogs text-purple-500"></i>
+                                <span class="text-sm font-medium">技术管理</span>
+                            </div>
+                        </div>
+                        
+                        <div class="search-suggestion" onclick="searchFor('产品设计')">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-palette text-purple-500"></i>
+                                <span class="text-sm font-medium">产品设计</span>
+                            </div>
+                        </div>
+                        
+                        <div class="search-suggestion" onclick="searchFor('营销策略')">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-chart-line text-purple-500"></i>
+                                <span class="text-sm font-medium">营销策略</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 推荐文章 -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">推荐阅读</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="article-card">
+                            <div class="flex items-start space-x-4">
+                                <img class="w-16 h-16 rounded-lg object-cover" src="https://images.unsplash.com/photo-1553484771-371a605b060b?w=100&h=100&fit=crop" alt="文章封面">
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-gray-900 mb-1">创业公司商业计划书撰写指南</h4>
+                                    <p class="text-sm text-gray-600 mb-2">从0到1的完整商业计划书撰写流程...</p>
+                                    <div class="flex items-center text-xs text-gray-500">
+                                        <span>5分钟阅读</span>
+                                        <span class="mx-2">•</span>
+                                        <span>1,234人阅读</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="article-card">
+                            <div class="flex items-start space-x-4">
+                                <img class="w-16 h-16 rounded-lg object-cover" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&h=100&fit=crop" alt="文章封面">
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-gray-900 mb-1">技术团队管理实战经验</h4>
+                                    <p class="text-sm text-gray-600 mb-2">如何建设高效的技术团队...</p>
+                                    <div class="flex items-center text-xs text-gray-500">
+                                        <span>8分钟阅读</span>
+                                        <span class="mx-2">•</span>
+                                        <span>892人阅读</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="article-card">
+                            <div class="flex items-start space-x-4">
+                                <img class="w-16 h-16 rounded-lg object-cover" src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=100&h=100&fit=crop" alt="文章封面">
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-gray-900 mb-1">产品设计思维方法论</h4>
+                                    <p class="text-sm text-gray-600 mb-2">用户体验设计的核心原则...</p>
+                                    <div class="flex items-center text-xs text-gray-500">
+                                        <span>6分钟阅读</span>
+                                        <span class="mx-2">•</span>
+                                        <span>567人阅读</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <a href="文章列表页.html" class="text-purple-600 hover:text-purple-700 font-medium text-sm">
+                            查看更多文章
+                            <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-2 mb-4">
+                    <div class="w-6 h-6 bg-gradient-to-br from-purple-600 to-purple-700 rounded flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-xs"></i>
+                    </div>
+                    <span class="text-lg font-bold text-gray-900 font-serif">DocuVault</span>
+                </div>
+                <p class="text-gray-600 text-sm">
+                    © 2024 DocuVault. 专业的知识付费平台
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 返回上一页
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '首页页参考界面.html';
+            }
+        }
+        
+        // 搜索功能
+        function searchFor(keyword) {
+            const searchInput = document.getElementById('search-input');
+            searchInput.value = keyword;
+            performSearch();
+        }
+        
+        function performSearch() {
+            const searchInput = document.getElementById('search-input');
+            const keyword = searchInput.value.trim();
+            
+            if (keyword) {
+                // 这里应该跳转到搜索结果页面
+                window.location.href = `文章列表页.html?search=${encodeURIComponent(keyword)}`;
+            }
+        }
+        
+        // 监听搜索框回车事件
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+        
+        // 记录404错误（用于分析）
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'page_view', {
+                page_title: '404 Error',
+                page_location: window.location.href,
+                custom_map: {
+                    'custom_parameter_1': 'error_page'
+                }
+            });
+        }
+    </script>
+</body>
+</html>

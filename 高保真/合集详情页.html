@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>合集详情 - DocuVault</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #9333ea 100%);
+        }
+        
+        .price-highlight {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .article-locked {
+            position: relative;
+        }
+        
+        .article-locked::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(2px);
+            border-radius: 0.5rem;
+        }
+        
+        .lock-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="首页页参考界面.html" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                    </a>
+                </div>
+                
+                <!-- 导航链接 -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="首页页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">首页</a>
+                    <a href="文章分类.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">分类</a>
+                    <a href="文章列表页.html?sort=popular" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">热门</a>
+                    <a href="文章列表页.html?sort=latest" class="text-gray-600 hover:text-purple-600 transition-colors duration-300">最新</a>
+                    <a href="内容合集.html" class="text-purple-600 font-medium">合集</a>
+                </div>
+                
+                <!-- 用户操作 -->
+                <div class="flex items-center space-x-4">
+                    <a href="邮箱登录.html" class="btn-secondary px-4 py-2 rounded-lg text-sm">
+                        登录
+                    </a>
+                    <a href="个人中心.html" class="flex items-center space-x-2">
+                        <img class="w-8 h-8 rounded-full border-2 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="用户头像">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 面包屑导航 -->
+    <div class="bg-white border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <nav class="flex items-center space-x-2 text-sm text-gray-500">
+                <a href="首页页参考界面.html" class="hover:text-purple-600 transition-colors duration-300">
+                    <i class="fas fa-home mr-1"></i>首页
+                </a>
+                <i class="fas fa-chevron-right text-xs"></i>
+                <a href="内容合集.html" class="hover:text-purple-600 transition-colors duration-300">内容合集</a>
+                <i class="fas fa-chevron-right text-xs"></i>
+                <span class="text-gray-900 font-medium" id="collection-breadcrumb">合集详情</span>
+            </nav>
+        </div>
+    </div>
+
+    <!-- 合集头部展示区 -->
+    <section class="hero-gradient text-white relative overflow-hidden" data-component="collection-hero">
+        <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div class="absolute top-0 right-0 w-96 h-96 bg-white bg-opacity-10 rounded-full transform translate-x-32 -translate-y-32"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-white bg-opacity-5 rounded-full transform -translate-x-16 translate-y-16"></div>
+        
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <!-- 左侧：合集信息 -->
+                <div>
+                    <div class="flex items-center space-x-3 mb-6">
+                        <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-medium" id="collection-category">
+                            前端开发
+                        </span>
+                        <div class="flex items-center space-x-1">
+                            <i class="fas fa-star text-yellow-300"></i>
+                            <span class="font-medium" id="collection-rating">4.8</span>
+                            <span class="text-white text-opacity-75 text-sm">(<span id="collection-reviews">256</span>评价)</span>
+                        </div>
+                    </div>
+                    
+                    <h1 class="text-4xl lg:text-5xl font-bold font-serif mb-6" id="collection-title">
+                        React 全栈开发合集
+                    </h1>
+                    
+                    <p class="text-xl text-white text-opacity-90 mb-8 leading-relaxed" id="collection-description">
+                        从零基础到高级应用的完整学习路径，包含 React 基础、进阶技巧、实战项目等精选内容，帮助你成为全栈开发专家。
+                    </p>
+                    
+                    <!-- 统计信息 -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" id="collection-articles">8</div>
+                            <div class="text-white text-opacity-75 text-sm">篇文章</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" id="collection-subscribers">1,234</div>
+                            <div class="text-white text-opacity-75 text-sm">人订阅</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" id="collection-duration">12</div>
+                            <div class="text-white text-opacity-75 text-sm">小时</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" id="collection-level">中级</div>
+                            <div class="text-white text-opacity-75 text-sm">难度</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧：合集封面 -->
+                <div class="flex justify-center lg:justify-end">
+                    <div class="relative">
+                        <img id="collection-cover" src="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop" 
+                             alt="合集封面" class="w-80 h-60 object-cover rounded-xl shadow-2xl">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black from-opacity-50 to-transparent rounded-xl"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 主要内容区域 -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <!-- 左侧：文章列表 -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl journal-shadow p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 font-serif mb-6">合集内容</h2>
+                    
+                    <div class="space-y-6" id="articles-list" data-component="collection-articles">
+                        <!-- 文章列表将通过JavaScript动态加载 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧：价格信息和购买 -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl journal-shadow p-8 sticky top-24" data-component="price-comparison">
+                    <!-- 价格对比 -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">价格信息</h3>
+                        
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-gray-600">单独购买</span>
+                                <span class="text-sm text-gray-500 line-through" id="total-price">¥319.2</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">合集价格</span>
+                                <span class="text-2xl font-bold text-purple-600" id="collection-price">¥199.9</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+                            <div class="text-lg font-bold price-highlight">节省 ¥119.3</div>
+                            <div class="text-sm text-gray-600">相比单独购买节省 37%</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 购买按钮 -->
+                    <div class="space-y-3">
+                        <button class="w-full btn-primary py-4 px-6 rounded-lg text-lg font-semibold" onclick="purchaseCollection()">
+                            <i class="fas fa-shopping-cart mr-2"></i>
+                            立即购买合集
+                        </button>
+                        
+                        <div class="flex space-x-3">
+                            <button class="flex-1 btn-secondary py-3 px-4 rounded-lg text-sm" onclick="addToFavorites()">
+                                <i class="fas fa-heart mr-1"></i>
+                                收藏
+                            </button>
+                            <button class="flex-1 btn-secondary py-3 px-4 rounded-lg text-sm" onclick="shareCollection()">
+                                <i class="fas fa-share mr-1"></i>
+                                分享
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 作者信息 -->
+                    <div class="mt-8 pt-8 border-t border-gray-200">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">作者介绍</h4>
+                        <div class="flex items-start space-x-4">
+                            <img id="author-avatar" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" 
+                                 alt="作者头像" class="w-12 h-12 rounded-full">
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-900" id="author-name">李四</div>
+                                <div class="text-sm text-gray-500 mb-2" id="author-title">全栈开发工程师</div>
+                                <div class="text-sm text-gray-600" id="author-bio">
+                                    5年全栈开发经验，专注于React生态系统和现代前端技术栈。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取URL参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const collectionId = urlParams.get('id') || 'react-fullstack';
+            
+            // 模拟合集数据
+            const collectionsData = {
+                'react-fullstack': {
+                    id: 'react-fullstack',
+                    title: 'React 全栈开发合集',
+                    description: '从零基础到高级应用的完整学习路径，包含 React 基础、进阶技巧、实战项目等精选内容，帮助你成为全栈开发专家。',
+                    category: '前端开发',
+                    rating: 4.8,
+                    reviews: 256,
+                    articles: 8,
+                    subscribers: 1234,
+                    duration: '12小时',
+                    level: '中级',
+                    price: 199.9,
+                    totalPrice: 319.2,
+                    cover: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop',
+                    author: {
+                        name: '李四',
+                        title: '全栈开发工程师',
+                        bio: '5年全栈开发经验，专注于React生态系统和现代前端技术栈。',
+                        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face'
+                    },
+                    articles: [
+                        {
+                            id: 1,
+                            title: 'React 基础入门',
+                            description: '从零开始学习React的核心概念，包括组件、JSX、状态管理等基础知识。',
+                            duration: '45分钟',
+                            isFree: true,
+                            isCompleted: false
+                        },
+                        {
+                            id: 2,
+                            title: 'React Hooks 深度解析',
+                            description: '深入理解React Hooks的工作原理，掌握useState、useEffect等常用Hook的使用方法。',
+                            duration: '60分钟',
+                            isFree: false,
+                            isCompleted: false
+                        },
+                        {
+                            id: 3,
+                            title: 'React Router 路由管理',
+                            description: '学习如何使用React Router构建单页应用的路由系统，实现页面导航和参数传递。',
+                            duration: '50分钟',
+                            isFree: false,
+                            isCompleted: false
+                        },
+                        {
+                            id: 4,
+                            title: 'Redux 状态管理',
+                            description: '掌握Redux的核心概念和使用方法，学会在React应用中进行全局状态管理。',
+                            duration: '75分钟',
+                            isFree: false,
+                            isCompleted: false
+                        },
+                        {
+                            id: 5,
+                            title: 'React 性能优化',
+                            description: '学习React应用的性能优化技巧，包括代码分割、懒加载、memo等优化策略。',
+                            duration: '55分钟',
+                            isFree: false,
+                            isCompleted: false
+                        }
+                    ]
+                }
+            };
+            
+            // 渲染合集详情
+            renderCollectionDetail(collectionId);
+            
+            function renderCollectionDetail(id) {
+                const collection = collectionsData[id];
+                if (!collection) {
+                    console.error('合集不存在');
+                    return;
+                }
+                
+                // 更新页面标题和面包屑
+                document.title = `${collection.title} - DocuVault`;
+                document.getElementById('collection-breadcrumb').textContent = collection.title;
+                
+                // 更新合集信息
+                document.getElementById('collection-category').textContent = collection.category;
+                document.getElementById('collection-rating').textContent = collection.rating;
+                document.getElementById('collection-reviews').textContent = collection.reviews;
+                document.getElementById('collection-title').textContent = collection.title;
+                document.getElementById('collection-description').textContent = collection.description;
+                document.getElementById('collection-articles').textContent = collection.articles;
+                document.getElementById('collection-subscribers').textContent = collection.subscribers.toLocaleString();
+                document.getElementById('collection-duration').textContent = collection.duration;
+                document.getElementById('collection-level').textContent = collection.level;
+                document.getElementById('collection-cover').src = collection.cover;
+                
+                // 更新价格信息
+                document.getElementById('collection-price').textContent = `¥${collection.price}`;
+                document.getElementById('total-price').textContent = `¥${collection.totalPrice}`;
+                
+                // 更新作者信息
+                document.getElementById('author-name').textContent = collection.author.name;
+                document.getElementById('author-title').textContent = collection.author.title;
+                document.getElementById('author-bio').textContent = collection.author.bio;
+                document.getElementById('author-avatar').src = collection.author.avatar;
+                
+                // 渲染文章列表
+                renderArticlesList(collection.articles);
+            }
+            
+            function renderArticlesList(articles) {
+                const container = document.getElementById('articles-list');
+                const articlesHTML = articles.map((article, index) => `
+                    <div class="border border-gray-200 rounded-lg p-6 ${article.isFree ? '' : 'article-locked'}" data-component="article-item">
+                        ${!article.isFree ? '<div class="lock-icon"><i class="fas fa-lock text-purple-600 text-2xl"></i></div>' : ''}
+                        
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center font-semibold text-sm">
+                                    ${index + 1}
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">${article.title}</h3>
+                                    <div class="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                                        <span><i class="fas fa-clock mr-1"></i>${article.duration}</span>
+                                        ${article.isFree ? '<span class="text-green-600 font-medium"><i class="fas fa-unlock mr-1"></i>免费预览</span>' : '<span class="text-purple-600 font-medium"><i class="fas fa-crown mr-1"></i>会员专享</span>'}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${article.isFree ? `
+                                <button class="btn-secondary px-4 py-2 rounded-lg text-sm" onclick="previewArticle(${article.id})">
+                                    <i class="fas fa-eye mr-1"></i>预览
+                                </button>
+                            ` : `
+                                <div class="text-purple-600">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                            `}
+                        </div>
+                        
+                        <p class="text-gray-600 leading-relaxed">${article.description}</p>
+                    </div>
+                `).join('');
+                
+                container.innerHTML = articlesHTML;
+            }
+        });
+        
+        // 购买合集
+        function purchaseCollection() {
+            window.open('支付弹窗.html', 'payment', 'width=600,height=700,scrollbars=yes,resizable=yes');
+        }
+        
+        // 收藏合集
+        function addToFavorites() {
+            // 模拟收藏功能
+            alert('已添加到收藏夹');
+        }
+        
+        // 分享合集
+        function shareCollection() {
+            // 模拟分享功能
+            if (navigator.share) {
+                navigator.share({
+                    title: document.getElementById('collection-title').textContent,
+                    text: document.getElementById('collection-description').textContent,
+                    url: window.location.href
+                });
+            } else {
+                // 复制链接到剪贴板
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('链接已复制到剪贴板');
+                });
+            }
+        }
+        
+        // 预览文章
+        function previewArticle(articleId) {
+            window.open(`文章预览.html?id=${articleId}`, '_blank');
+        }
+    </script>
+</body>
+</html>

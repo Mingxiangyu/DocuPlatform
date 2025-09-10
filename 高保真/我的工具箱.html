@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的工具箱 - DocuVault</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+            .nav-active {
+                @apply bg-purple-50 text-purple-600 border-l-4 border-purple-500;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .journal-shadow-hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .tool-card {
+            transition: all 0.3s ease;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tool-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .usage-chart {
+            background: linear-gradient(90deg, #a855f7 0%, #3b82f6 100%);
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .filter-tab {
+            @apply px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 cursor-pointer;
+        }
+        
+        .filter-tab-active {
+            @apply bg-purple-100 text-purple-700 border border-purple-300;
+        }
+        
+        .filter-tab-inactive {
+            @apply bg-white text-gray-600 border border-gray-200 hover:bg-purple-50 hover:text-purple-600;
+        }
+        
+        .usage-bar {
+            height: 4px;
+            background: linear-gradient(90deg, #a855f7, #3b82f6);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="首页页参考界面.html" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                    </a>
+                </div>
+                
+                <!-- 搜索栏 -->
+                <div class="flex-1 max-w-lg mx-8">
+                    <div class="relative">
+                        <input type="text" 
+                               placeholder="搜索工具..."
+                               id="search-tools"
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <!-- 用户操作 -->
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-600 hover:text-purple-600 transition-colors duration-300">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                    <button class="text-gray-600 hover:text-purple-600 transition-colors duration-300">
+                        <i class="fas fa-bookmark"></i>
+                    </button>
+                    <div class="relative">
+                        <button class="flex items-center space-x-2">
+                            <img class="w-8 h-8 rounded-full border-2 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="用户头像">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- 侧边栏 -->
+            <div class="lg:col-span-1">
+                <!-- 个人信息卡片 -->
+                <div class="bg-white rounded-lg journal-shadow p-6 mb-6">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="relative mb-4">
+                            <img class="w-24 h-24 rounded-full border-4 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=128&h=128&fit=crop&crop=face" alt="用户头像">
+                            <button class="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center border border-gray-200 text-gray-500 hover:text-purple-600 hover:border-purple-300 transition-all duration-300">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 font-serif mb-1">张小明</h3>
+                        <p class="text-sm text-gray-500 mb-3">前端开发工程师 @科技公司</p>
+                        <div class="flex items-center space-x-2 text-amber-500 text-sm mb-4">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                            <span class="text-gray-600 ml-1">4.5 (128评价)</span>
+                        </div>
+                        <button class="w-full btn-primary py-2 px-4 rounded-lg text-sm">
+                            编辑个人资料
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 导航菜单 -->
+                <div class="bg-white rounded-lg journal-shadow overflow-hidden">
+                    <ul class="divide-y divide-gray-100">
+                        <li>
+                            <a href="个人中心.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-user-circle w-5 text-center"></i>
+                                <span>个人中心</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的购买.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-shopping-bag w-5 text-center"></i>
+                                <span>我的购买</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的点赞.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-bookmark w-5 text-center"></i>
+                                <span>我的收藏</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的点赞.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-heart w-5 text-center"></i>
+                                <span>我的点赞</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的笔记.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-sticky-note w-5 text-center"></i>
+                                <span>我的笔记</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的工具箱.html" class="nav-active flex items-center space-x-3 px-6 py-3 text-sm">
+                                <i class="fas fa-tools w-5 text-center"></i>
+                                <span>我的工具箱</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的购买.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-credit-card w-5 text-center"></i>
+                                <span>我的订单</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="账户设置页.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-cog w-5 text-center"></i>
+                                <span>账户设置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 主内容区域 -->
+            <div class="lg:col-span-3">
+                <!-- 页面标题和统计 -->
+                <div class="mb-8">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900 font-serif mb-2">我的工具箱</h1>
+                            <p class="text-gray-600">管理您使用过的开发工具和在线服务，提升工作效率</p>
+                        </div>
+                        
+                        <!-- 统计信息 -->
+                        <div class="flex items-center space-x-6 mt-4 md:mt-0">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-purple-600" id="total-tools">18</div>
+                                <div class="text-sm text-gray-500">总工具</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600" id="frequently-used">6</div>
+                                <div class="text-sm text-gray-500">常用工具</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-amber-600" id="this-month">12</div>
+                                <div class="text-sm text-gray-500">本月使用</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 筛选标签 -->
+                    <div class="bg-white rounded-lg journal-shadow p-6 mb-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                            <!-- 分类筛选 -->
+                            <div class="flex flex-wrap gap-2">
+                                <span class="filter-tab filter-tab-active" data-category="all">
+                                    全部工具 (18)
+                                </span>
+                                <span class="filter-tab filter-tab-inactive" data-category="development">
+                                    开发工具 (8)
+                                </span>
+                                <span class="filter-tab filter-tab-inactive" data-category="design">
+                                    设计工具 (4)
+                                </span>
+                                <span class="filter-tab filter-tab-inactive" data-category="productivity">
+                                    效率工具 (6)
+                                </span>
+                            </div>
+                            
+                            <!-- 排序选项 -->
+                            <div class="flex items-center space-x-4">
+                                <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent" id="sort-tools">
+                                    <option value="usage">按使用频率</option>
+                                    <option value="recent">最近使用</option>
+                                    <option value="name">按名称排序</option>
+                                    <option value="category">按分类排序</option>
+                                </select>
+                                
+                                <button class="btn-primary px-4 py-2 rounded-lg text-sm" id="add-tool">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    添加工具
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 工具列表 -->
+                <div id="tools-container">
+                    <!-- 工具列表将通过JavaScript动态加载 -->
+                </div>
+                
+                <!-- 加载更多 -->
+                <div class="text-center mt-8">
+                    <button class="btn-secondary px-6 py-3 rounded-lg" id="load-more">
+                        <i class="fas fa-plus mr-2"></i>
+                        加载更多工具
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 工具数据
+            const toolsData = [
+                {
+                    id: 1,
+                    name: 'Visual Studio Code',
+                    description: '强大的代码编辑器，支持多种编程语言和丰富的插件生态',
+                    category: 'development',
+                    categoryName: '开发工具',
+                    icon: 'fas fa-code',
+                    color: '#007ACC',
+                    usageCount: 156,
+                    lastUsed: '2024-12-08',
+                    frequency: 'daily',
+                    url: 'https://code.visualstudio.com',
+                    tags: ['编辑器', '开发', 'IDE']
+                },
+                {
+                    id: 2,
+                    name: 'Figma',
+                    description: '协作式界面设计工具，支持实时协作和原型制作',
+                    category: 'design',
+                    categoryName: '设计工具',
+                    icon: 'fas fa-paint-brush',
+                    color: '#F24E1E',
+                    usageCount: 89,
+                    lastUsed: '2024-12-07',
+                    frequency: 'weekly',
+                    url: 'https://figma.com',
+                    tags: ['设计', 'UI', '原型']
+                },
+                {
+                    id: 3,
+                    name: 'GitHub',
+                    description: '代码托管和版本控制平台，支持团队协作开发',
+                    category: 'development',
+                    categoryName: '开发工具',
+                    icon: 'fab fa-github',
+                    color: '#181717',
+                    usageCount: 234,
+                    lastUsed: '2024-12-08',
+                    frequency: 'daily',
+                    url: 'https://github.com',
+                    tags: ['版本控制', 'Git', '协作']
+                },
+                {
+                    id: 4,
+                    name: 'Notion',
+                    description: '全能的工作空间，集笔记、任务管理、数据库于一体',
+                    category: 'productivity',
+                    categoryName: '效率工具',
+                    icon: 'fas fa-sticky-note',
+                    color: '#000000',
+                    usageCount: 67,
+                    lastUsed: '2024-12-06',
+                    frequency: 'weekly',
+                    url: 'https://notion.so',
+                    tags: ['笔记', '任务管理', '协作']
+                },
+                {
+                    id: 5,
+                    name: 'Chrome DevTools',
+                    description: '浏览器开发者工具，用于调试和优化网页性能',
+                    category: 'development',
+                    categoryName: '开发工具',
+                    icon: 'fab fa-chrome',
+                    color: '#4285F4',
+                    usageCount: 198,
+                    lastUsed: '2024-12-08',
+                    frequency: 'daily',
+                    url: 'https://developer.chrome.com/docs/devtools',
+                    tags: ['调试', '性能', '浏览器']
+                },
+                {
+                    id: 6,
+                    name: 'Postman',
+                    description: 'API 开发和测试工具，支持 REST、GraphQL 等多种协议',
+                    category: 'development',
+                    categoryName: '开发工具',
+                    icon: 'fas fa-paper-plane',
+                    color: '#FF6C37',
+                    usageCount: 45,
+                    lastUsed: '2024-12-05',
+                    frequency: 'weekly',
+                    url: 'https://postman.com',
+                    tags: ['API', '测试', 'REST']
+                }
+            ];
+
+            let currentCategory = 'all';
+            let currentSort = 'usage';
+            let searchTerm = '';
+
+            // 渲染工具列表
+            function renderTools(tools) {
+                const container = document.getElementById('tools-container');
+
+                if (tools.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-16">
+                            <div class="w-24 h-24 mx-auto mb-4 text-gray-300">
+                                <i class="fas fa-tools text-6xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">暂无工具记录</h3>
+                            <p class="text-gray-600 mb-6">开始使用工具并记录您的使用历史</p>
+                            <button class="btn-primary px-6 py-3 rounded-lg inline-flex items-center" id="add-first-tool">
+                                <i class="fas fa-plus mr-2"></i>
+                                添加第一个工具
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const toolsHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${tools.map(tool => `
+                            <div class="tool-card bg-white rounded-lg journal-shadow overflow-hidden" data-component="tool-card" data-tool-id="${tool.id}">
+                                <!-- 工具头部 -->
+                                <div class="p-6 pb-4">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-12 h-12 tool-icon rounded-lg flex items-center justify-center text-white" style="background-color: ${tool.color}">
+                                                <i class="${tool.icon} text-xl"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-lg font-semibold text-gray-900">${tool.name}</h3>
+                                                <span class="text-xs text-purple-600 font-medium">${tool.categoryName}</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            ${tool.frequency === 'daily' ? `
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                                    <i class="fas fa-circle text-green-500 mr-1" style="font-size: 6px;"></i>
+                                                    每日使用
+                                                </span>
+                                            ` : tool.frequency === 'weekly' ? `
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                                    <i class="fas fa-circle text-blue-500 mr-1" style="font-size: 6px;"></i>
+                                                    每周使用
+                                                </span>
+                                            ` : `
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                                    <i class="fas fa-circle text-gray-500 mr-1" style="font-size: 6px;"></i>
+                                                    偶尔使用
+                                                </span>
+                                            `}
+                                        </div>
+                                    </div>
+
+                                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                                        ${tool.description}
+                                    </p>
+
+                                    <!-- 使用统计 -->
+                                    <div class="mb-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-sm text-gray-600">使用次数</span>
+                                            <span class="text-sm font-medium text-gray-900">${tool.usageCount} 次</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-1">
+                                            <div class="usage-bar" style="width: ${Math.min(tool.usageCount / 250 * 100, 100)}%"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between text-xs text-gray-500 mb-4">
+                                        <span>最后使用：${tool.lastUsed}</span>
+                                        <a href="${tool.url}" target="_blank" class="text-purple-600 hover:text-purple-700 transition-colors duration-300">
+                                            <i class="fas fa-external-link-alt mr-1"></i>
+                                            访问工具
+                                        </a>
+                                    </div>
+
+                                    <!-- 标签 -->
+                                    <div class="flex flex-wrap gap-2 mb-4">
+                                        ${tool.tags.map(tag => `
+                                            <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                                                ${tag}
+                                            </span>
+                                        `).join('')}
+                                    </div>
+
+                                    <!-- 操作按钮 -->
+                                    <div class="flex items-center space-x-2">
+                                        <button class="flex-1 btn-primary py-2 px-3 rounded-lg text-sm" onclick="recordUsage(${tool.id})">
+                                            <i class="fas fa-play mr-1"></i>
+                                            记录使用
+                                        </button>
+                                        <button class="btn-secondary py-2 px-3 rounded-lg text-sm" onclick="editTool(${tool.id})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-secondary py-2 px-3 rounded-lg text-sm text-red-600 hover:text-red-700" onclick="deleteTool(${tool.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                container.innerHTML = toolsHTML;
+            }
+
+            // 显示加载状态
+            function showLoadingState() {
+                const container = document.getElementById('tools-container');
+                const skeletonHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${Array(6).fill().map(() => `
+                            <div class="bg-white rounded-lg journal-shadow p-6">
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div class="skeleton w-12 h-12 bg-gray-200 rounded-lg"></div>
+                                    <div>
+                                        <div class="skeleton h-4 bg-gray-200 rounded mb-2 w-24"></div>
+                                        <div class="skeleton h-3 bg-gray-200 rounded w-16"></div>
+                                    </div>
+                                </div>
+                                <div class="skeleton h-4 bg-gray-200 rounded mb-2 w-full"></div>
+                                <div class="skeleton h-4 bg-gray-200 rounded mb-4 w-3/4"></div>
+                                <div class="skeleton h-2 bg-gray-200 rounded mb-4 w-full"></div>
+                                <div class="skeleton h-8 bg-gray-200 rounded w-full"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                container.innerHTML = skeletonHTML;
+            }
+
+            // 筛选和排序工具
+            function filterAndSortTools() {
+                let filtered = [...toolsData];
+
+                // 按分类筛选
+                if (currentCategory !== 'all') {
+                    filtered = filtered.filter(tool => tool.category === currentCategory);
+                }
+
+                // 按搜索词筛选
+                if (searchTerm) {
+                    filtered = filtered.filter(tool =>
+                        tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        tool.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        tool.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+                    );
+                }
+
+                // 排序
+                filtered.sort((a, b) => {
+                    if (currentSort === 'usage') {
+                        return b.usageCount - a.usageCount;
+                    } else if (currentSort === 'recent') {
+                        return new Date(b.lastUsed) - new Date(a.lastUsed);
+                    } else if (currentSort === 'name') {
+                        return a.name.localeCompare(b.name);
+                    } else if (currentSort === 'category') {
+                        return a.categoryName.localeCompare(b.categoryName);
+                    }
+                    return 0;
+                });
+
+                return filtered;
+            }
+
+            // 更新筛选标签状态
+            function updateFilterTabs() {
+                const filterTabs = document.querySelectorAll('.filter-tab');
+                filterTabs.forEach(tab => {
+                    const category = tab.dataset.category;
+                    if (category === currentCategory) {
+                        tab.className = 'filter-tab filter-tab-active';
+                    } else {
+                        tab.className = 'filter-tab filter-tab-inactive';
+                    }
+                });
+            }
+
+            // 更新视图
+            function updateView() {
+                showLoadingState();
+
+                setTimeout(() => {
+                    const filtered = filterAndSortTools();
+                    renderTools(filtered);
+                }, 500);
+            }
+
+            // 记录工具使用
+            window.recordUsage = function(toolId) {
+                const tool = toolsData.find(t => t.id === toolId);
+                if (tool) {
+                    tool.usageCount++;
+                    tool.lastUsed = new Date().toISOString().split('T')[0];
+
+                    // 显示成功提示
+                    const button = event.target.closest('button');
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<i class="fas fa-check mr-1"></i>已记录';
+                    button.disabled = true;
+
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                        updateView();
+                    }, 1500);
+                }
+            };
+
+            // 编辑工具
+            window.editTool = function(toolId) {
+                alert(`编辑工具 ID: ${toolId}`);
+            };
+
+            // 删除工具
+            window.deleteTool = function(toolId) {
+                if (confirm('确定要删除这个工具吗？')) {
+                    const index = toolsData.findIndex(t => t.id === toolId);
+                    if (index > -1) {
+                        toolsData.splice(index, 1);
+                        updateView();
+                    }
+                }
+            };
+
+            // 事件监听器
+
+            // 分类筛选
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    currentCategory = this.dataset.category;
+                    updateFilterTabs();
+                    updateView();
+                });
+            });
+
+            // 排序选择
+            document.getElementById('sort-tools').addEventListener('change', function() {
+                currentSort = this.value;
+                updateView();
+            });
+
+            // 搜索功能
+            const searchInput = document.getElementById('search-tools');
+            searchInput.addEventListener('input', function() {
+                searchTerm = this.value.trim();
+
+                // 防抖处理
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    updateView();
+                }, 500);
+            });
+
+            // 添加工具
+            document.getElementById('add-tool').addEventListener('click', function() {
+                alert('打开添加工具对话框');
+            });
+
+            // 加载更多
+            document.getElementById('load-more').addEventListener('click', function() {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>加载中...';
+                this.disabled = true;
+
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-plus mr-2"></i>加载更多工具';
+                    this.disabled = false;
+                }, 1500);
+            });
+
+            // 初始化页面
+            updateFilterTabs();
+            updateView();
+        });
+    </script>
+</body>
+</html>

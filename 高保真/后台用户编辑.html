@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑用户 - DocuVault 管理后台</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+            .nav-active {
+                @apply bg-purple-50 text-purple-600 border-r-2 border-purple-600;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .admin-sidebar {
+            width: 280px;
+            min-height: calc(100vh - 64px);
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            min-width: 160px;
+            z-index: 50;
+            display: none;
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        .permission-group {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .permission-item {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .permission-item:last-child {
+            border-bottom: none;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+            padding-bottom: 1.5rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0.5rem;
+            width: 0.5rem;
+            height: 0.5rem;
+            background: #9333ea;
+            border-radius: 50%;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 0.75rem;
+            top: 1rem;
+            width: 1px;
+            height: calc(100% - 0.5rem);
+            background: #e5e7eb;
+        }
+        
+        .timeline-item:last-child::after {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shield-alt text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                        <span class="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded">
+                            管理后台
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- 用户操作 -->
+                <div class="flex items-center space-x-4">
+                    <a href="首页页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        前台首页
+                    </a>
+                    <div class="relative">
+                        <button class="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors duration-300" onclick="toggleUserMenu()">
+                            <img class="w-8 h-8 rounded-full border-2 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="管理员头像">
+                            <span class="text-sm font-medium">管理员</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="user-menu" class="dropdown-menu">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">个人设置</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">修改密码</a>
+                            <hr class="my-1">
+                            <a href="后台管理登录.html" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">退出登录</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <div class="flex flex-1">
+        <!-- 侧边栏 -->
+        <aside class="admin-sidebar bg-white border-r border-gray-200 journal-shadow">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">管理功能</h3>
+                <nav class="space-y-2">
+                    <a href="后台文章管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-file-alt w-5 text-center"></i>
+                        <span>文章管理</span>
+                    </a>
+                    <a href="后台用户管理.html" class="nav-active flex items-center space-x-3 px-4 py-3 text-sm rounded-lg transition-colors duration-300">
+                        <i class="fas fa-users w-5 text-center"></i>
+                        <span>用户管理</span>
+                    </a>
+                    <a href="后台订单管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-shopping-cart w-5 text-center"></i>
+                        <span>订单管理</span>
+                    </a>
+                    <a href="后台合集管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-layer-group w-5 text-center"></i>
+                        <span>合集管理</span>
+                    </a>
+                    <a href="后台数据统计.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-chart-bar w-5 text-center"></i>
+                        <span>数据统计</span>
+                    </a>
+                    <a href="后台附件管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-paperclip w-5 text-center"></i>
+                        <span>附件管理</span>
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 p-6">
+            <!-- 面包屑导航 -->
+            <div class="mb-6">
+                <nav class="flex items-center space-x-2 text-sm text-gray-500">
+                    <a href="后台文章管理.html" class="hover:text-purple-600 transition-colors duration-300">
+                        <i class="fas fa-home mr-1"></i>管理后台
+                    </a>
+                    <i class="fas fa-chevron-right text-xs"></i>
+                    <a href="后台用户管理.html" class="hover:text-purple-600 transition-colors duration-300">用户管理</a>
+                    <i class="fas fa-chevron-right text-xs"></i>
+                    <span class="text-gray-900 font-medium">编辑用户</span>
+                </nav>
+            </div>
+
+            <!-- 页面标题 -->
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-900 font-serif">编辑用户</h1>
+                <p class="text-gray-600 mt-2">管理用户的基本信息、角色权限和账户状态</p>
+            </div>
+
+            <!-- 双栏布局 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- 左侧：用户信息卡片 -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg journal-shadow p-6" data-component="user-info-card">
+                        <!-- 用户头像和基本信息 -->
+                        <div class="text-center mb-6">
+                            <img id="user-avatar" src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=120&h=120&fit=crop&crop=face" 
+                                 alt="用户头像" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-purple-100">
+                            <h2 id="user-name" class="text-xl font-semibold text-gray-900">王小美</h2>
+                            <p id="user-email" class="text-gray-500 text-sm">wangxiaomei@example.com</p>
+                        </div>
+
+                        <!-- 用户统计 -->
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                <div class="text-lg font-semibold text-gray-900" id="user-articles">12</div>
+                                <div class="text-xs text-gray-500">发布文章</div>
+                            </div>
+                            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                <div class="text-lg font-semibold text-gray-900" id="user-purchases">8</div>
+                                <div class="text-xs text-gray-500">购买次数</div>
+                            </div>
+                        </div>
+
+                        <!-- 账户状态 -->
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700">账户状态</span>
+                                <select id="account-status" class="text-sm border border-gray-300 rounded px-2 py-1">
+                                    <option value="active">正常</option>
+                                    <option value="suspended">冻结</option>
+                                    <option value="banned">禁用</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700">注册时间</span>
+                                <span class="text-sm text-gray-500" id="register-date">2024-01-15</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700">最后登录</span>
+                                <span class="text-sm text-gray-500" id="last-login">2024-12-08 14:30</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：权限编辑表单 -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg journal-shadow p-6" data-component="permission-editor">
+                        <!-- 角色选择 -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">用户角色</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <label class="relative">
+                                    <input type="radio" name="user-role" value="user" checked class="sr-only peer">
+                                    <div class="p-4 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-purple-600 peer-checked:bg-purple-50 transition-all duration-300">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-user text-gray-600 peer-checked:text-purple-600"></i>
+                                            <div>
+                                                <div class="font-medium text-gray-900">普通用户</div>
+                                                <div class="text-xs text-gray-500">基础阅读权限</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <label class="relative">
+                                    <input type="radio" name="user-role" value="editor" class="sr-only peer">
+                                    <div class="p-4 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-purple-600 peer-checked:bg-purple-50 transition-all duration-300">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-edit text-gray-600 peer-checked:text-purple-600"></i>
+                                            <div>
+                                                <div class="font-medium text-gray-900">内容运营</div>
+                                                <div class="text-xs text-gray-500">内容管理权限</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <label class="relative">
+                                    <input type="radio" name="user-role" value="admin" class="sr-only peer">
+                                    <div class="p-4 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-purple-600 peer-checked:bg-purple-50 transition-all duration-300">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-crown text-gray-600 peer-checked:text-purple-600"></i>
+                                            <div>
+                                                <div class="font-medium text-gray-900">管理员</div>
+                                                <div class="text-xs text-gray-500">完整管理权限</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 权限矩阵 -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">详细权限</h3>
+                            <div class="space-y-4" id="permission-matrix">
+                                <!-- 权限组将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+
+                        <!-- 操作按钮 -->
+                        <div class="flex justify-end space-x-4">
+                            <button type="button" class="btn-secondary px-6 py-2 rounded-lg" onclick="window.location.href='后台用户管理.html'">
+                                取消
+                            </button>
+                            <button type="button" class="btn-primary px-6 py-2 rounded-lg" onclick="saveUserChanges()">
+                                保存更改
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 操作日志 -->
+                    <div class="bg-white rounded-lg journal-shadow p-6 mt-6" data-component="operation-log">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">操作日志</h3>
+                        <div class="space-y-4" id="operation-timeline">
+                            <!-- 操作日志将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取URL参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('id') || '1';
+            
+            // 模拟用户数据
+            const userData = {
+                id: userId,
+                name: '王小美',
+                email: 'wangxiaomei@example.com',
+                avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=120&h=120&fit=crop&crop=face',
+                role: 'user',
+                status: 'active',
+                articles: 12,
+                purchases: 8,
+                registerDate: '2024-01-15',
+                lastLogin: '2024-12-08 14:30'
+            };
+            
+            // 权限配置
+            const permissions = {
+                content: {
+                    name: '内容管理',
+                    items: [
+                        { key: 'article_view', name: '查看文章', roles: ['user', 'editor', 'admin'] },
+                        { key: 'article_create', name: '创建文章', roles: ['editor', 'admin'] },
+                        { key: 'article_edit', name: '编辑文章', roles: ['editor', 'admin'] },
+                        { key: 'article_delete', name: '删除文章', roles: ['admin'] }
+                    ]
+                },
+                user: {
+                    name: '用户管理',
+                    items: [
+                        { key: 'user_view', name: '查看用户', roles: ['admin'] },
+                        { key: 'user_edit', name: '编辑用户', roles: ['admin'] },
+                        { key: 'user_delete', name: '删除用户', roles: ['admin'] }
+                    ]
+                },
+                order: {
+                    name: '订单管理',
+                    items: [
+                        { key: 'order_view', name: '查看订单', roles: ['editor', 'admin'] },
+                        { key: 'order_edit', name: '处理订单', roles: ['admin'] }
+                    ]
+                },
+                data: {
+                    name: '数据统计',
+                    items: [
+                        { key: 'data_view', name: '查看数据', roles: ['editor', 'admin'] },
+                        { key: 'data_export', name: '导出数据', roles: ['admin'] }
+                    ]
+                }
+            };
+            
+            // 操作日志数据
+            const operationLogs = [
+                {
+                    action: '修改用户角色',
+                    details: '从普通用户变更为内容运营',
+                    operator: '管理员',
+                    time: '2024-12-08 10:30:00'
+                },
+                {
+                    action: '账户状态变更',
+                    details: '账户状态从冻结恢复为正常',
+                    operator: '管理员',
+                    time: '2024-12-07 16:45:00'
+                },
+                {
+                    action: '用户注册',
+                    details: '用户完成注册，默认角色为普通用户',
+                    operator: '系统',
+                    time: '2024-01-15 09:20:00'
+                }
+            ];
+            
+            // 渲染用户信息
+            renderUserInfo(userData);
+            
+            // 渲染权限矩阵
+            renderPermissionMatrix(permissions, userData.role);
+            
+            // 渲染操作日志
+            renderOperationLog(operationLogs);
+            
+            // 绑定角色切换事件
+            bindRoleChangeEvents();
+            
+            function renderUserInfo(user) {
+                document.getElementById('user-avatar').src = user.avatar;
+                document.getElementById('user-name').textContent = user.name;
+                document.getElementById('user-email').textContent = user.email;
+                document.getElementById('user-articles').textContent = user.articles;
+                document.getElementById('user-purchases').textContent = user.purchases;
+                document.getElementById('account-status').value = user.status;
+                document.getElementById('register-date').textContent = user.registerDate;
+                document.getElementById('last-login').textContent = user.lastLogin;
+                
+                // 设置角色选择
+                document.querySelector(`input[name="user-role"][value="${user.role}"]`).checked = true;
+            }
+            
+            function renderPermissionMatrix(permissions, currentRole) {
+                const container = document.getElementById('permission-matrix');
+                const permissionHTML = Object.keys(permissions).map(groupKey => {
+                    const group = permissions[groupKey];
+                    const itemsHTML = group.items.map(item => {
+                        const hasPermission = item.roles.includes(currentRole);
+                        return `
+                            <div class="permission-item">
+                                <div class="flex-1">
+                                    <span class="text-sm font-medium text-gray-900">${item.name}</span>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" ${hasPermission ? 'checked' : ''} 
+                                           data-permission="${item.key}" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                                </label>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    return `
+                        <div class="permission-group">
+                            <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                <h4 class="text-sm font-semibold text-gray-900">${group.name}</h4>
+                            </div>
+                            ${itemsHTML}
+                        </div>
+                    `;
+                }).join('');
+                
+                container.innerHTML = permissionHTML;
+            }
+            
+            function renderOperationLog(logs) {
+                const container = document.getElementById('operation-timeline');
+                const logsHTML = logs.map(log => `
+                    <div class="timeline-item">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">${log.action}</div>
+                                <div class="text-sm text-gray-600 mt-1">${log.details}</div>
+                                <div class="text-xs text-gray-500 mt-2">
+                                    <span>操作人：${log.operator}</span>
+                                    <span class="ml-4">${log.time}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                container.innerHTML = logsHTML;
+            }
+            
+            function bindRoleChangeEvents() {
+                const roleInputs = document.querySelectorAll('input[name="user-role"]');
+                roleInputs.forEach(input => {
+                    input.addEventListener('change', function() {
+                        if (this.checked) {
+                            renderPermissionMatrix(permissions, this.value);
+                        }
+                    });
+                });
+            }
+        });
+        
+        // 用户菜单切换
+        function toggleUserMenu() {
+            const menu = document.getElementById('user-menu');
+            menu.classList.toggle('show');
+        }
+        
+        // 保存用户更改
+        function saveUserChanges() {
+            const role = document.querySelector('input[name="user-role"]:checked').value;
+            const status = document.getElementById('account-status').value;
+            
+            // 获取所有权限设置
+            const permissions = [];
+            document.querySelectorAll('input[data-permission]:checked').forEach(checkbox => {
+                permissions.push(checkbox.getAttribute('data-permission'));
+            });
+            
+            // 模拟保存
+            console.log('保存用户更改:', { role, status, permissions });
+            alert('用户信息已保存');
+        }
+        
+        // 点击外部关闭菜单
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('user-menu');
+            const button = e.target.closest('button');
+            if (!button || !button.onclick) {
+                menu.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

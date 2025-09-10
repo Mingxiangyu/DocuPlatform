@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章列表 - DocuVault</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+            .filter-active {
+                @apply bg-purple-100 text-purple-700 border-purple-300;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .journal-shadow-hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .article-card {
+            transition: all 0.3s ease;
+        }
+        
+        .article-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .view-toggle.active {
+            background-color: #a855f7;
+            color: white;
+        }
+        
+        .filter-tag {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .filter-tag:hover {
+            background-color: #f3e8ff;
+            color: #7c3aed;
+        }
+        
+        .highlight {
+            background-color: #fef3c7;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                    </div>
+                </div>
+                
+                <!-- 搜索栏 -->
+                <div class="flex-1 max-w-lg mx-8">
+                    <div class="relative">
+                        <input type="text" 
+                               id="search-input"
+                               placeholder="搜索文档、作者或标签..."
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <!-- 用户操作 -->
+                <div class="flex items-center space-x-4">
+                    <a href="首页页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        首页
+                    </a>
+                    <button class="text-gray-600 hover:text-purple-600 transition-colors duration-300">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                    <button class="text-gray-600 hover:text-purple-600 transition-colors duration-300">
+                        <i class="fas fa-bookmark"></i>
+                    </button>
+                    <div class="relative">
+                        <button class="flex items-center space-x-2">
+                            <img class="w-8 h-8 rounded-full border-2 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="用户头像">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- 筛选器侧边栏 -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg journal-shadow p-6 sticky top-24">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">筛选条件</h3>
+                    
+                    <!-- 分类筛选 -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">分类</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500" checked>
+                                <span class="ml-2 text-sm text-gray-600">全部</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-600">前端开发</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-600">后端开发</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-600">产品设计</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 价格筛选 -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">价格</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="price" class="text-purple-600 focus:ring-purple-500" checked>
+                                <span class="ml-2 text-sm text-gray-600">全部</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="price" class="text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-600">免费</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="price" class="text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-600">付费</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 难度筛选 -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">难度</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-600">入门</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-600">进阶</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-600">高级</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 阅读时长筛选 -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">阅读时长</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-600">5分钟以内</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-600">5-15分钟</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-600">15分钟以上</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 重置按钮 -->
+                    <button class="w-full btn-secondary py-2 px-4 rounded-lg text-sm">
+                        重置筛选
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 文章列表主区域 -->
+            <div class="lg:col-span-3">
+                <!-- 页面标题和控制栏 -->
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 font-serif mb-2">全部文章</h1>
+                        <p class="text-gray-600">发现优质技术内容，提升专业技能</p>
+                    </div>
+                    
+                    <!-- 排序和视图控制 -->
+                    <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                        <!-- 排序选择 -->
+                        <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option>最新发布</option>
+                            <option>最受欢迎</option>
+                            <option>价格从低到高</option>
+                            <option>价格从高到低</option>
+                        </select>
+                        
+                        <!-- 视图切换 -->
+                        <div class="flex border border-gray-300 rounded-lg overflow-hidden">
+                            <button class="view-toggle active px-3 py-2 text-sm bg-gray-100" data-view="grid">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button class="view-toggle px-3 py-2 text-sm bg-white" data-view="list">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 文章网格 -->
+                <div id="articles-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <!-- 文章卡片将通过JavaScript动态生成 -->
+                </div>
+                
+                <!-- 加载更多按钮 -->
+                <div class="text-center mt-8">
+                    <button id="load-more-btn" class="btn-primary px-6 py-3 rounded-lg">
+                        <span class="loading-text">加载更多文章</span>
+                        <span class="loading-spinner hidden">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>
+                            加载中...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center text-gray-500 text-sm">
+                <p>&copy; 2024 DocuVault. 专业技术文档平台.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 示例文章数据
+        const articlesData = [
+            {
+                id: 1,
+                title: 'React 18 新特性深度解析',
+                excerpt: '详细介绍 React 18 的并发特性、Suspense 改进以及新的 Hooks API，帮助开发者更好地理解和使用这些新功能。',
+                author: '张三',
+                authorAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face',
+                publishDate: '2024-12-08',
+                readTime: '15分钟',
+                likes: 234,
+                image: 'https://picsum.photos/600/400?random=1',
+                isPaid: false,
+                price: 0,
+                category: '前端开发',
+                difficulty: '进阶',
+                tags: ['React', 'JavaScript', '前端']
+            },
+            {
+                id: 2,
+                title: 'Vue 3 Composition API 实战指南',
+                excerpt: '从基础概念到高级应用，全面掌握 Vue 3 Composition API 的使用技巧和最佳实践。',
+                author: '李四',
+                authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face',
+                publishDate: '2024-12-07',
+                readTime: '20分钟',
+                likes: 189,
+                image: 'https://picsum.photos/600/400?random=2',
+                isPaid: true,
+                price: 29.9,
+                category: '前端开发',
+                difficulty: '进阶',
+                tags: ['Vue', 'JavaScript', 'Composition API']
+            },
+            {
+                id: 3,
+                title: 'Node.js 微服务架构设计',
+                excerpt: '学习如何使用 Node.js 构建可扩展的微服务架构，包括服务发现、负载均衡和容错处理。',
+                author: '王五',
+                authorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop&crop=face',
+                publishDate: '2024-12-06',
+                readTime: '25分钟',
+                likes: 156,
+                image: 'https://picsum.photos/600/400?random=3',
+                isPaid: true,
+                price: 39.9,
+                category: '后端开发',
+                difficulty: '高级',
+                tags: ['Node.js', '微服务', '架构']
+            },
+            {
+                id: 4,
+                title: 'UI/UX 设计系统构建指南',
+                excerpt: '从零开始构建完整的设计系统，包括组件库、设计规范和协作流程。',
+                author: '赵六',
+                authorAvatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=64&h=64&fit=crop&crop=face',
+                publishDate: '2024-12-05',
+                readTime: '18分钟',
+                likes: 203,
+                image: 'https://picsum.photos/600/400?random=4',
+                isPaid: false,
+                price: 0,
+                category: '产品设计',
+                difficulty: '入门',
+                tags: ['UI', 'UX', '设计系统']
+            },
+            {
+                id: 5,
+                title: 'Docker 容器化部署实践',
+                excerpt: '掌握 Docker 容器技术，学习如何将应用程序容器化并部署到生产环境。',
+                author: '孙七',
+                authorAvatar: 'https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=64&h=64&fit=crop&crop=face',
+                publishDate: '2024-12-04',
+                readTime: '22分钟',
+                likes: 178,
+                image: 'https://picsum.photos/600/400?random=5',
+                isPaid: true,
+                price: 24.9,
+                category: '后端开发',
+                difficulty: '进阶',
+                tags: ['Docker', '容器', '部署']
+            },
+            {
+                id: 6,
+                title: 'TypeScript 高级类型系统',
+                excerpt: '深入理解 TypeScript 的高级类型特性，提升代码的类型安全性和可维护性。',
+                author: '周八',
+                authorAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face',
+                publishDate: '2024-12-03',
+                readTime: '16分钟',
+                likes: 145,
+                image: 'https://picsum.photos/600/400?random=6',
+                isPaid: true,
+                price: 19.9,
+                category: '前端开发',
+                difficulty: '高级',
+                tags: ['TypeScript', '类型系统', '前端']
+            }
+        ];
+
+        let currentPage = 1;
+        let currentView = 'grid';
+        let isLoading = false;
+
+        // 渲染文章卡片
+        function renderArticleCard(article) {
+            const priceDisplay = article.isPaid ? `¥${article.price}` : '免费阅读';
+            const priceClass = article.isPaid ? 'text-purple-600 font-semibold' : 'text-green-600 font-semibold';
+
+            return `
+                <div class="article-card bg-white rounded-lg journal-shadow overflow-hidden" data-component="article-card">
+                    <div class="relative">
+                        <img src="${article.image}" alt="${article.title}" class="w-full h-48 object-cover">
+                        <div class="absolute top-3 left-3">
+                            <span class="inline-block px-2 py-1 text-xs font-medium bg-white bg-opacity-90 text-gray-700 rounded">
+                                ${article.category}
+                            </span>
+                        </div>
+                        <div class="absolute top-3 right-3">
+                            <span class="inline-block px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded">
+                                ${article.difficulty}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 font-serif">
+                            ${article.title}
+                        </h3>
+
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+                            ${article.excerpt}
+                        </p>
+
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-2">
+                                <img src="${article.authorAvatar}" alt="${article.author}" class="w-6 h-6 rounded-full">
+                                <span class="text-sm text-gray-600">${article.author}</span>
+                            </div>
+                            <div class="flex items-center space-x-4 text-xs text-gray-500">
+                                <span><i class="fas fa-clock mr-1"></i>${article.readTime}</span>
+                                <span><i class="fas fa-heart mr-1"></i>${article.likes}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="${priceClass}">${priceDisplay}</span>
+                            <button class="btn-primary px-4 py-2 rounded-lg text-sm">
+                                ${article.isPaid ? '立即购买' : '立即阅读'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染文章列表
+        function renderArticles(articles) {
+            const container = document.getElementById('articles-container');
+            const articlesHTML = articles.map(article => renderArticleCard(article)).join('');
+
+            if (currentPage === 1) {
+                container.innerHTML = articlesHTML;
+            } else {
+                container.innerHTML += articlesHTML;
+            }
+        }
+
+        // 加载更多文章
+        function loadMoreArticles() {
+            if (isLoading) return;
+
+            isLoading = true;
+            const loadBtn = document.getElementById('load-more-btn');
+            const loadingText = loadBtn.querySelector('.loading-text');
+            const loadingSpinner = loadBtn.querySelector('.loading-spinner');
+
+            loadingText.classList.add('hidden');
+            loadingSpinner.classList.remove('hidden');
+
+            // 模拟API调用
+            setTimeout(() => {
+                currentPage++;
+                // 这里可以添加更多文章数据
+                const moreArticles = articlesData.slice(0, 3); // 模拟加载更多
+                renderArticles(moreArticles);
+
+                isLoading = false;
+                loadingText.classList.remove('hidden');
+                loadingSpinner.classList.add('hidden');
+            }, 1000);
+        }
+
+        // 视图切换
+        function toggleView(view) {
+            currentView = view;
+            const container = document.getElementById('articles-container');
+            const toggleButtons = document.querySelectorAll('.view-toggle');
+
+            toggleButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.view === view) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (view === 'list') {
+                container.className = 'space-y-4';
+                // 重新渲染为列表视图
+                renderArticlesListView(articlesData);
+            } else {
+                container.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6';
+                renderArticles(articlesData);
+            }
+        }
+
+        // 列表视图渲染
+        function renderArticlesListView(articles) {
+            const container = document.getElementById('articles-container');
+            const articlesHTML = articles.map(article => {
+                const priceDisplay = article.isPaid ? `¥${article.price}` : '免费阅读';
+                const priceClass = article.isPaid ? 'text-purple-600 font-semibold' : 'text-green-600 font-semibold';
+
+                return `
+                    <div class="article-card bg-white rounded-lg journal-shadow p-6 flex space-x-6" data-component="article-card">
+                        <img src="${article.image}" alt="${article.title}" class="w-32 h-24 object-cover rounded-lg flex-shrink-0">
+
+                        <div class="flex-1">
+                            <div class="flex items-start justify-between mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900 font-serif">${article.title}</h3>
+                                <span class="${priceClass}">${priceDisplay}</span>
+                            </div>
+
+                            <p class="text-gray-600 text-sm mb-3 line-clamp-2">${article.excerpt}</p>
+
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex items-center space-x-2">
+                                        <img src="${article.authorAvatar}" alt="${article.author}" class="w-6 h-6 rounded-full">
+                                        <span class="text-sm text-gray-600">${article.author}</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">${article.category}</span>
+                                    <span class="text-xs text-gray-500">${article.readTime}</span>
+                                </div>
+
+                                <button class="btn-primary px-4 py-2 rounded-lg text-sm">
+                                    ${article.isPaid ? '立即购买' : '立即阅读'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = articlesHTML;
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const searchInput = document.getElementById('search-input');
+            const searchTerm = searchInput.value.toLowerCase();
+
+            if (searchTerm) {
+                const filteredArticles = articlesData.filter(article =>
+                    article.title.toLowerCase().includes(searchTerm) ||
+                    article.excerpt.toLowerCase().includes(searchTerm) ||
+                    article.author.toLowerCase().includes(searchTerm) ||
+                    article.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+                );
+
+                if (currentView === 'list') {
+                    renderArticlesListView(filteredArticles);
+                } else {
+                    renderArticles(filteredArticles);
+                }
+            } else {
+                if (currentView === 'list') {
+                    renderArticlesListView(articlesData);
+                } else {
+                    renderArticles(articlesData);
+                }
+            }
+        }
+
+        // 事件监听器
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化文章列表
+            renderArticles(articlesData);
+
+            // 加载更多按钮
+            document.getElementById('load-more-btn').addEventListener('click', loadMoreArticles);
+
+            // 视图切换按钮
+            document.querySelectorAll('.view-toggle').forEach(btn => {
+                btn.addEventListener('click', () => toggleView(btn.dataset.view));
+            });
+
+            // 搜索功能
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('input', handleSearch);
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

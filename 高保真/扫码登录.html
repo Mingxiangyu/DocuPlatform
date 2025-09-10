@@ -114,7 +114,7 @@
                 
                 <!-- 右侧操作区 -->
                 <div class="flex items-center">
-                    <a href="首页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                    <a href="首页页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
                         返回首页
                     </a>
                 </div>
@@ -187,9 +187,9 @@
                         <button id="switch-to-password" class="w-full btn-primary py-3 px-4 rounded-lg">
                             切换到密码登录
                         </button>
-                        <button class="w-full btn-secondary py-3 px-4 rounded-lg">
-                            <i class="fas fa-mobile-alt mr-2 text-lg"></i>
-                            手机验证码登录
+                        <button class="w-full btn-secondary py-3 px-4 rounded-lg" onclick="window.location.href='创建账户.html'">
+                            <i class="fas fa-user-plus mr-2 text-lg"></i>
+                            立即注册
                         </button>
                     </div>
                     
@@ -261,7 +261,7 @@
             
             // 切换到密码登录
             document.getElementById('switch-to-password').addEventListener('click', function() {
-                window.location.href = 'login.html';
+                window.location.href = '邮箱登录.html';
             });
         });
     </script>

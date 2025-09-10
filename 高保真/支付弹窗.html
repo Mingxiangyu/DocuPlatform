@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付弹窗 - DocuVault</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        },
+                        green: {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+            .modal-overlay {
+                @apply fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .modal-enter {
+            animation: modalEnter 0.3s ease-out;
+        }
+        
+        .modal-leave {
+            animation: modalLeave 0.3s ease-in;
+        }
+        
+        @keyframes modalEnter {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        @keyframes modalLeave {
+            from {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+        }
+        
+        .qr-code-container {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        
+        .payment-method-active {
+            @apply bg-purple-50 border-purple-500 text-purple-700;
+        }
+        
+        .payment-method-inactive {
+            @apply bg-white border-gray-200 text-gray-600 hover:border-purple-300 hover:bg-purple-50;
+        }
+        
+        .pulse-dot {
+            animation: pulseDot 2s infinite;
+        }
+        
+        @keyframes pulseDot {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+        }
+        
+        .success-checkmark {
+            animation: successPop 0.6s ease-out;
+        }
+        
+        @keyframes successPop {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .countdown-ring {
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        
+        .countdown-progress {
+            transition: stroke-dashoffset 1s linear;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <!-- 演示按钮 -->
+    <div class="text-center mb-8">
+        <h1 class="text-2xl font-bold text-gray-900 font-serif mb-4">支付弹窗组件演示</h1>
+        <button id="show-payment-modal" class="btn-primary px-6 py-3 rounded-lg">
+            <i class="fas fa-credit-card mr-2"></i>
+            显示支付弹窗
+        </button>
+    </div>
+
+    <!-- 支付弹窗 -->
+    <div id="payment-modal" class="modal-overlay hidden" data-component="payment-modal">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full modal-enter" id="modal-content">
+            <!-- 弹窗头部 -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-credit-card text-purple-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">完成支付</h3>
+                        <p class="text-sm text-gray-500">Modern React Hooks 完全指南</p>
+                    </div>
+                </div>
+                <button id="close-modal" class="text-gray-400 hover:text-gray-600 transition-colors duration-300">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- 支付内容 -->
+            <div class="p-6">
+                <!-- 支付方式选择 -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">选择支付方式</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="payment-method payment-method-active border-2 rounded-lg p-3 text-center transition-all duration-300" 
+                                data-method="wechat">
+                            <i class="fab fa-weixin text-2xl text-green-500 mb-2"></i>
+                            <div class="text-sm font-medium">微信支付</div>
+                        </button>
+                        <button class="payment-method payment-method-inactive border-2 rounded-lg p-3 text-center transition-all duration-300" 
+                                data-method="alipay">
+                            <i class="fab fa-alipay text-2xl text-blue-500 mb-2"></i>
+                            <div class="text-sm font-medium">支付宝</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 订单信息 -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-600">商品名称</span>
+                        <span class="text-sm font-medium text-gray-900">React Hooks 完全指南</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-600">订单编号</span>
+                        <span class="text-sm font-mono text-gray-900">DV202412090001</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">支付金额</span>
+                        <span class="text-lg font-bold text-purple-600">¥29.9</span>
+                    </div>
+                </div>
+
+                <!-- 二维码区域 -->
+                <div id="qr-code-section" class="text-center">
+                    <div class="qr-code-container rounded-lg p-6 mb-4">
+                        <div class="w-48 h-48 mx-auto bg-white rounded-lg p-4 relative">
+                            <!-- 二维码模拟图案 -->
+                            <div class="w-full h-full relative">
+                                <div class="absolute inset-2 grid grid-cols-6 gap-1">
+                                    <!-- 模拟二维码图案 -->
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-white rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                    <div class="bg-gray-800 rounded-sm"></div>
+                                </div>
+                                
+                                <!-- 中心Logo -->
+                                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-lg flex items-center justify-center border-2 border-gray-200">
+                                    <i class="fab fa-weixin text-green-500 text-xl" id="qr-logo"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-center space-x-2 mb-4">
+                        <div class="pulse-dot w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span class="text-sm text-gray-600" id="payment-status">请使用微信扫描二维码完成支付</span>
+                    </div>
+                    
+                    <!-- 倒计时 -->
+                    <div class="flex items-center justify-center space-x-2 mb-4">
+                        <svg class="w-6 h-6 countdown-ring">
+                            <circle cx="12" cy="12" r="10" stroke="#e5e7eb" stroke-width="2" fill="none"></circle>
+                            <circle cx="12" cy="12" r="10" stroke="#22c55e" stroke-width="2" fill="none" 
+                                    stroke-dasharray="62.83" stroke-dashoffset="0" class="countdown-progress" id="countdown-circle"></circle>
+                        </svg>
+                        <span class="text-sm text-gray-500">
+                            <span id="countdown-time">300</span> 秒后过期
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 支付成功状态 -->
+                <div id="success-section" class="text-center hidden">
+                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 success-checkmark">
+                        <i class="fas fa-check text-3xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">支付成功！</h3>
+                    <p class="text-gray-600 mb-6">您已获得文章的永久阅读权限</p>
+                    <button class="btn-primary w-full py-3 rounded-lg" id="continue-reading">
+                        <i class="fas fa-book-open mr-2"></i>
+                        继续阅读
+                    </button>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div id="action-buttons" class="space-y-3">
+                    <button class="btn-secondary w-full py-3 rounded-lg" id="refresh-qr">
+                        <i class="fas fa-sync-alt mr-2"></i>
+                        刷新二维码
+                    </button>
+                    <div class="text-center">
+                        <button class="text-sm text-gray-500 hover:text-purple-600 transition-colors duration-300" id="payment-help">
+                            <i class="fas fa-question-circle mr-1"></i>
+                            支付遇到问题？
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 模态窗口元素
+            const modal = document.getElementById('payment-modal');
+            const modalContent = document.getElementById('modal-content');
+            const showModalBtn = document.getElementById('show-payment-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+
+            // 支付相关元素
+            const paymentMethods = document.querySelectorAll('.payment-method');
+            const qrLogo = document.getElementById('qr-logo');
+            const paymentStatus = document.getElementById('payment-status');
+            const qrSection = document.getElementById('qr-code-section');
+            const successSection = document.getElementById('success-section');
+            const actionButtons = document.getElementById('action-buttons');
+
+            // 倒计时相关元素
+            const countdownTime = document.getElementById('countdown-time');
+            const countdownCircle = document.getElementById('countdown-circle');
+
+            let countdownTimer = null;
+            let paymentTimer = null;
+            let currentPaymentMethod = 'wechat';
+
+            // 显示模态窗口
+            function showModal() {
+                modal.classList.remove('hidden');
+                modalContent.classList.add('modal-enter');
+                modalContent.classList.remove('modal-leave');
+                document.body.style.overflow = 'hidden';
+
+                // 开始倒计时
+                startCountdown();
+
+                // 模拟支付检测
+                startPaymentDetection();
+            }
+
+            // 隐藏模态窗口
+            function hideModal() {
+                modalContent.classList.add('modal-leave');
+                modalContent.classList.remove('modal-enter');
+
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                    resetModal();
+                }, 300);
+
+                // 清除定时器
+                if (countdownTimer) {
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                }
+
+                if (paymentTimer) {
+                    clearTimeout(paymentTimer);
+                    paymentTimer = null;
+                }
+            }
+
+            // 重置模态窗口状态
+            function resetModal() {
+                qrSection.classList.remove('hidden');
+                successSection.classList.add('hidden');
+                actionButtons.classList.remove('hidden');
+
+                // 重置倒计时
+                countdownTime.textContent = '300';
+                countdownCircle.style.strokeDashoffset = '0';
+
+                // 重置支付方式
+                currentPaymentMethod = 'wechat';
+                updatePaymentMethod();
+            }
+
+            // 开始倒计时
+            function startCountdown() {
+                let timeLeft = 300; // 5分钟
+                const totalTime = 300;
+                const circumference = 2 * Math.PI * 10; // 圆的周长
+
+                countdownTimer = setInterval(() => {
+                    timeLeft--;
+                    countdownTime.textContent = timeLeft;
+
+                    // 更新圆形进度条
+                    const progress = (totalTime - timeLeft) / totalTime;
+                    const offset = circumference * progress;
+                    countdownCircle.style.strokeDashoffset = offset;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(countdownTimer);
+                        showTimeoutMessage();
+                    }
+                }, 1000);
+            }
+
+            // 显示超时消息
+            function showTimeoutMessage() {
+                paymentStatus.textContent = '二维码已过期，请刷新后重试';
+                paymentStatus.className = 'text-sm text-red-600';
+
+                // 添加过期样式
+                const qrContainer = document.querySelector('.qr-code-container');
+                qrContainer.style.opacity = '0.5';
+                qrContainer.style.filter = 'grayscale(100%)';
+            }
+
+            // 模拟支付检测
+            function startPaymentDetection() {
+                // 模拟8秒后支付成功
+                paymentTimer = setTimeout(() => {
+                    showPaymentSuccess();
+                }, 8000);
+            }
+
+            // 显示支付成功
+            function showPaymentSuccess() {
+                qrSection.classList.add('hidden');
+                actionButtons.classList.add('hidden');
+                successSection.classList.remove('hidden');
+
+                // 清除倒计时
+                if (countdownTimer) {
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                }
+            }
+
+            // 更新支付方式
+            function updatePaymentMethod() {
+                paymentMethods.forEach(method => {
+                    const methodType = method.dataset.method;
+                    if (methodType === currentPaymentMethod) {
+                        method.className = 'payment-method payment-method-active border-2 rounded-lg p-3 text-center transition-all duration-300';
+                    } else {
+                        method.className = 'payment-method payment-method-inactive border-2 rounded-lg p-3 text-center transition-all duration-300';
+                    }
+                });
+
+                // 更新二维码logo和提示文字
+                if (currentPaymentMethod === 'wechat') {
+                    qrLogo.className = 'fab fa-weixin text-green-500 text-xl';
+                    paymentStatus.textContent = '请使用微信扫描二维码完成支付';
+                } else {
+                    qrLogo.className = 'fab fa-alipay text-blue-500 text-xl';
+                    paymentStatus.textContent = '请使用支付宝扫描二维码完成支付';
+                }
+            }
+
+            // 刷新二维码
+            function refreshQRCode() {
+                const refreshBtn = document.getElementById('refresh-qr');
+                const originalText = refreshBtn.innerHTML;
+
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>刷新中...';
+                refreshBtn.disabled = true;
+
+                // 重置二维码样式
+                const qrContainer = document.querySelector('.qr-code-container');
+                qrContainer.style.opacity = '';
+                qrContainer.style.filter = '';
+
+                setTimeout(() => {
+                    refreshBtn.innerHTML = originalText;
+                    refreshBtn.disabled = false;
+
+                    // 重新开始倒计时
+                    if (countdownTimer) {
+                        clearInterval(countdownTimer);
+                    }
+                    startCountdown();
+
+                    // 重置状态文字
+                    paymentStatus.className = 'text-sm text-gray-600';
+                    updatePaymentMethod();
+                }, 1500);
+            }
+
+            // 事件监听器
+            showModalBtn.addEventListener('click', showModal);
+            closeModalBtn.addEventListener('click', hideModal);
+
+            // 点击遮罩层关闭
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    hideModal();
+                }
+            });
+
+            // ESC键关闭
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    hideModal();
+                }
+            });
+
+            // 支付方式切换
+            paymentMethods.forEach(method => {
+                method.addEventListener('click', function() {
+                    currentPaymentMethod = this.dataset.method;
+                    updatePaymentMethod();
+                });
+            });
+
+            // 刷新二维码
+            document.getElementById('refresh-qr').addEventListener('click', refreshQRCode);
+
+            // 继续阅读
+            document.getElementById('continue-reading').addEventListener('click', function() {
+                hideModal();
+                // 跳转到我的购买页面
+                if (window.opener) {
+                    window.opener.location.href = '我的购买.html';
+                    window.close();
+                } else {
+                    window.location.href = '我的购买.html';
+                }
+            });
+
+            // 支付帮助
+            document.getElementById('payment-help').addEventListener('click', function() {
+                alert('如遇支付问题，请联系客服：service@docuvault.com');
+            });
+
+            // 添加触摸设备支持
+            if ('ontouchstart' in window) {
+                // 防止iOS Safari的橡皮筋效果
+                modal.addEventListener('touchmove', function(e) {
+                    e.preventDefault();
+                }, { passive: false });
+            }
+
+            // 支付状态轮询（实际项目中的实现）
+            function pollPaymentStatus(orderId) {
+                // 这里应该是实际的API调用
+                // fetch(`/api/payment/status/${orderId}`)
+                //     .then(response => response.json())
+                //     .then(data => {
+                //         if (data.status === 'paid') {
+                //             showPaymentSuccess();
+                //         } else if (data.status === 'expired') {
+                //             showTimeoutMessage();
+                //         } else {
+                //             // 继续轮询
+                //             setTimeout(() => pollPaymentStatus(orderId), 2000);
+                //         }
+                //     });
+            }
+
+            // 生成订单号
+            function generateOrderId() {
+                const now = new Date();
+                const timestamp = now.getFullYear().toString() +
+                    (now.getMonth() + 1).toString().padStart(2, '0') +
+                    now.getDate().toString().padStart(2, '0') +
+                    now.getHours().toString().padStart(2, '0') +
+                    now.getMinutes().toString().padStart(2, '0') +
+                    now.getSeconds().toString().padStart(2, '0');
+                const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                return `DV${timestamp}${random}`;
+            }
+
+            // 初始化
+            updatePaymentMethod();
+        });
+    </script>
+</body>
+</html>

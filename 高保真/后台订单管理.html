@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单管理 - DocuVault 后台</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+            .nav-active {
+                @apply bg-purple-50 text-purple-600 border-l-4 border-purple-500;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-paid {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-failed {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .status-refunded {
+            background-color: #e0f2fe;
+            color: #0277bd;
+        }
+        
+        .table-hover:hover {
+            background-color: #f8fafc;
+        }
+        
+        .admin-sidebar {
+            width: 280px;
+            min-height: calc(100vh - 64px);
+        }
+        
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            min-width: 160px;
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            background: linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chart-placeholder {
+            text-align: center;
+            color: #7c3aed;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shield-alt text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                        <span class="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded">
+                            管理后台
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- 用户操作 -->
+                <div class="flex items-center space-x-4">
+                    <a href="首页页参考界面.html" class="text-gray-600 hover:text-purple-600 transition-colors duration-300 font-medium">
+                        前台首页
+                    </a>
+                    <div class="relative">
+                        <button class="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors duration-300" onclick="toggleUserMenu()">
+                            <img class="w-8 h-8 rounded-full border-2 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="管理员头像">
+                            <span class="text-sm font-medium">管理员</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="user-menu" class="dropdown-menu">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">个人设置</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">修改密码</a>
+                            <hr class="my-1">
+                            <a href="后台管理登录.html" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">退出登录</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <div class="flex flex-1">
+        <!-- 侧边栏 -->
+        <aside class="admin-sidebar bg-white border-r border-gray-200 journal-shadow">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">管理功能</h3>
+                <nav class="space-y-2">
+                    <a href="后台文章管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-file-alt w-5 text-center"></i>
+                        <span>文章管理</span>
+                    </a>
+                    <a href="后台用户管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-users w-5 text-center"></i>
+                        <span>用户管理</span>
+                    </a>
+                    <a href="#" class="nav-active flex items-center space-x-3 px-4 py-3 text-sm rounded-lg transition-colors duration-300">
+                        <i class="fas fa-shopping-cart w-5 text-center"></i>
+                        <span>订单管理</span>
+                    </a>
+                    <a href="后台合集管理.html" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-layer-group w-5 text-center"></i>
+                        <span>合集管理</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-chart-bar w-5 text-center"></i>
+                        <span>数据统计</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-300">
+                        <i class="fas fa-cog w-5 text-center"></i>
+                        <span>系统设置</span>
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="flex-1 p-6">
+            <!-- 页面标题和操作 -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 font-serif mb-2">订单管理</h1>
+                    <p class="text-gray-600">管理平台交易订单和支付状态</p>
+                </div>
+                
+                <div class="flex items-center space-x-3 mt-4 md:mt-0">
+                    <button class="btn-secondary px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-download mr-2"></i>
+                        导出订单
+                    </button>
+                    <button class="btn-primary px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        财务报表
+                    </button>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-lg journal-shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">总订单数</p>
+                            <p class="text-2xl font-bold text-gray-900">2,456</p>
+                            <p class="text-xs text-green-600 mt-1">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                +12.5%
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shopping-cart text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg journal-shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">总收入</p>
+                            <p class="text-2xl font-bold text-green-600">¥89,234</p>
+                            <p class="text-xs text-green-600 mt-1">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                +8.2%
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg journal-shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">待处理</p>
+                            <p class="text-2xl font-bold text-amber-600">23</p>
+                            <p class="text-xs text-red-600 mt-1">
+                                <i class="fas fa-arrow-down mr-1"></i>
+                                -2.1%
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-amber-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg journal-shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">退款订单</p>
+                            <p class="text-2xl font-bold text-red-600">8</p>
+                            <p class="text-xs text-green-600 mt-1">
+                                <i class="fas fa-arrow-down mr-1"></i>
+                                -15.3%
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-undo text-red-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 收入趋势图 -->
+            <div class="bg-white rounded-lg journal-shadow p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">收入趋势</h3>
+                    <div class="flex items-center space-x-2">
+                        <select class="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option>最近7天</option>
+                            <option>最近30天</option>
+                            <option>最近90天</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-placeholder">
+                        <i class="fas fa-chart-line text-4xl mb-4"></i>
+                        <p class="text-lg font-medium">收入趋势图</p>
+                        <p class="text-sm opacity-75">这里将显示收入变化趋势</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 筛选和搜索 -->
+            <div class="bg-white rounded-lg journal-shadow p-6 mb-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                    <!-- 搜索框 -->
+                    <div class="flex-1 max-w-md">
+                        <div class="relative">
+                            <input type="text"
+                                   id="search-input"
+                                   placeholder="搜索订单号、用户邮箱..."
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- 筛选器 -->
+                    <div class="flex items-center space-x-3">
+                        <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option>全部状态</option>
+                            <option>已支付</option>
+                            <option>待支付</option>
+                            <option>支付失败</option>
+                            <option>已退款</option>
+                        </select>
+
+                        <input type="date" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+
+                        <button class="btn-secondary px-3 py-2 rounded-lg text-sm">
+                            <i class="fas fa-filter mr-1"></i>
+                            筛选
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 订单列表 -->
+            <div class="bg-white rounded-lg journal-shadow overflow-hidden">
+                <!-- 表格头部 -->
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">订单列表</h3>
+                        <div class="flex items-center space-x-2">
+                            <label class="flex items-center text-sm text-gray-600">
+                                <input type="checkbox" id="select-all" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500 mr-2">
+                                全选
+                            </label>
+                            <button class="text-sm text-gray-600 hover:text-purple-600 transition-colors duration-300">
+                                批量操作
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 表格内容 -->
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <input type="checkbox" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">订单信息</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">购买用户</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金额</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <!-- 订单行 1 -->
+                            <tr class="table-hover">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input type="checkbox" class="order-checkbox rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">#ORD-20240120-001</div>
+                                        <div class="text-sm text-gray-500">支付宝</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <img class="w-8 h-8 rounded-full border border-gray-200" src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=64&h=64&fit=crop&crop=face" alt="用户头像">
+                                        <div class="ml-3">
+                                            <div class="text-sm font-medium text-gray-900">张小美</div>
+                                            <div class="text-sm text-gray-500">zhang.xiaomei@example.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">《创业公司商业计划书撰写指南》</div>
+                                    <div class="text-sm text-gray-500">单篇文章</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">¥29.90</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-badge status-paid">已支付</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    2024-01-20 14:30
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex items-center space-x-2">
+                                        <button class="text-purple-600 hover:text-purple-900 transition-colors duration-300">
+                                            详情
+                                        </button>
+                                        <button class="text-red-600 hover:text-red-900 transition-colors duration-300">
+                                            退款
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 订单行 2 -->
+                            <tr class="table-hover">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input type="checkbox" class="order-checkbox rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">#ORD-20240120-002</div>
+                                        <div class="text-sm text-gray-500">微信支付</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <img class="w-8 h-8 rounded-full border border-gray-200" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face" alt="用户头像">
+                                        <div class="ml-3">
+                                            <div class="text-sm font-medium text-gray-900">李明</div>
+                                            <div class="text-sm text-gray-500">li.ming@example.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">《创业合集》</div>
+                                    <div class="text-sm text-gray-500">文章合集 (5篇)</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">¥99.00</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-badge status-pending">待支付</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    2024-01-20 16:45
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex items-center space-x-2">
+                                        <button class="text-purple-600 hover:text-purple-900 transition-colors duration-300">
+                                            详情
+                                        </button>
+                                        <button class="text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                                            催付
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 订单行 3 -->
+                            <tr class="table-hover">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input type="checkbox" class="order-checkbox rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">#ORD-20240119-045</div>
+                                        <div class="text-sm text-gray-500">支付宝</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <img class="w-8 h-8 rounded-full border border-gray-200" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=64&h=64&fit=crop&crop=face" alt="用户头像">
+                                        <div class="ml-3">
+                                            <div class="text-sm font-medium text-gray-900">陈小雨</div>
+                                            <div class="text-sm text-gray-500">chen.xiaoyu@example.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">《产品设计思维》</div>
+                                    <div class="text-sm text-gray-500">单篇文章</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">¥39.90</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-badge status-refunded">已退款</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    2024-01-19 09:15
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex items-center space-x-2">
+                                        <button class="text-purple-600 hover:text-purple-900 transition-colors duration-300">
+                                            详情
+                                        </button>
+                                        <span class="text-gray-400">已处理</span>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 订单行 4 -->
+                            <tr class="table-hover">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input type="checkbox" class="order-checkbox rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">#ORD-20240119-032</div>
+                                        <div class="text-sm text-gray-500">微信支付</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <img class="w-8 h-8 rounded-full border border-gray-200" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop&crop=face" alt="用户头像">
+                                        <div class="ml-3">
+                                            <div class="text-sm font-medium text-gray-900">王强</div>
+                                            <div class="text-sm text-gray-500">wang.qiang@example.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">《技术管理实战》</div>
+                                    <div class="text-sm text-gray-500">单篇文章</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">¥49.90</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-badge status-failed">支付失败</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    2024-01-19 11:20
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex items-center space-x-2">
+                                        <button class="text-purple-600 hover:text-purple-900 transition-colors duration-300">
+                                            详情
+                                        </button>
+                                        <button class="text-blue-600 hover:text-blue-900 transition-colors duration-300">
+                                            重试
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-700">
+                            显示 <span class="font-medium">1</span> 到 <span class="font-medium">10</span> 条，共 <span class="font-medium">2,456</span> 条记录
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-500 bg-white hover:bg-gray-50 transition-colors duration-300" disabled>
+                                上一页
+                            </button>
+                            <button class="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-300">
+                                1
+                            </button>
+                            <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-300">
+                                2
+                            </button>
+                            <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-300">
+                                3
+                            </button>
+                            <span class="px-2 text-gray-500">...</span>
+                            <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-300">
+                                246
+                            </button>
+                            <button class="px-3 py-1 text-sm border border-gray-300 rounded text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-300">
+                                下一页
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 切换用户菜单
+        function toggleUserMenu() {
+            const menu = document.getElementById('user-menu');
+            menu.classList.toggle('show');
+        }
+
+        // 全选功能
+        document.getElementById('select-all').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.order-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        // 点击外部关闭下拉菜单
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('user-menu');
+            if (!event.target.closest('.relative')) {
+                userMenu.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

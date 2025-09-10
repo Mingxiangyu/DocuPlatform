@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章编辑器 - DocuVault 后台</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+            .nav-active {
+                @apply bg-purple-50 text-purple-600 border-l-4 border-purple-500;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .editor-container {
+            height: calc(100vh - 200px);
+            min-height: 500px;
+        }
+        
+        .editor-toolbar {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 16px;
+            background: #f9fafb;
+        }
+        
+        .editor-content {
+            height: calc(100% - 60px);
+        }
+        
+        .editor-textarea {
+            resize: none;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .preview-content {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            color: #374151;
+        }
+        
+        .preview-content h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #111827;
+            font-family: 'Crimson Text', serif;
+        }
+        
+        .preview-content h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #111827;
+            font-family: 'Crimson Text', serif;
+        }
+        
+        .preview-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #111827;
+        }
+        
+        .preview-content p {
+            margin-bottom: 1rem;
+        }
+        
+        .preview-content code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+        }
+        
+        .preview-content pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .preview-content blockquote {
+            border-left: 4px solid #a855f7;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #6b7280;
+            font-style: italic;
+        }
+        
+        .preview-content ul, .preview-content ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+        
+        .preview-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .paywall-marker {
+            border: 2px dashed #a855f7;
+            background: #faf5ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            text-align: center;
+            color: #7c3aed;
+            font-weight: 500;
+        }
+        
+        .tab-active {
+            background: white;
+            border-bottom: 2px solid #a855f7;
+            color: #7c3aed;
+        }
+        
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #a855f7;
+            background: #faf5ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #7c3aed;
+            background: #f3e8ff;
+        }
+        
+        .auto-save-indicator {
+            display: none;
+            color: #10b981;
+            font-size: 12px;
+        }
+        
+        .auto-save-indicator.saving {
+            color: #f59e0b;
+        }
+        
+        .auto-save-indicator.show {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo和面包屑 -->
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shield-alt text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                        <span class="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded">
+                            管理后台
+                        </span>
+                    </div>
+                    
+                    <!-- 面包屑导航 -->
+                    <nav class="flex items-center space-x-2 text-sm text-gray-500">
+                        <a href="后台文章管理.html" class="hover:text-purple-600">文章管理</a>
+                        <i class="fas fa-chevron-right text-xs"></i>
+                        <span class="text-gray-900">文章编辑器</span>
+                    </nav>
+                </div>
+                
+                <!-- 操作按钮 -->
+                <div class="flex items-center space-x-3">
+                    <div class="auto-save-indicator" id="auto-save-indicator">
+                        <i class="fas fa-check-circle"></i>
+                        <span>已自动保存</span>
+                    </div>
+                    
+                    <button class="btn-secondary px-4 py-2 rounded-lg text-sm" onclick="window.location.href='后台文章管理.html'">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        返回管理
+                    </button>
+
+                    <button class="btn-secondary px-4 py-2 rounded-lg text-sm" onclick="saveDraft()">
+                        <i class="fas fa-save mr-2"></i>
+                        保存草稿
+                    </button>
+
+                    <button class="btn-secondary px-4 py-2 rounded-lg text-sm" onclick="previewArticle()">
+                        <i class="fas fa-eye mr-2"></i>
+                        预览
+                    </button>
+                    
+                    <button class="btn-primary px-4 py-2 rounded-lg text-sm" onclick="publishArticle()">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        发布文章
+                    </button>
+                    
+                    <div class="relative">
+                        <button class="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors duration-300" onclick="toggleUserMenu()">
+                            <img class="w-8 h-8 rounded-full border-2 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="管理员头像">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <div class="flex flex-1">
+        <!-- 编辑器主区域 -->
+        <main class="flex-1 flex">
+            <!-- 左侧：Markdown编辑器 -->
+            <div class="w-1/2 bg-white border-r border-gray-200">
+                <!-- 编辑器工具栏 -->
+                <div class="editor-toolbar">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <button class="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded" onclick="insertMarkdown('**', '**')" title="加粗">
+                                <i class="fas fa-bold"></i>
+                            </button>
+                            <button class="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded" onclick="insertMarkdown('*', '*')" title="斜体">
+                                <i class="fas fa-italic"></i>
+                            </button>
+                            <button class="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded" onclick="insertMarkdown('## ', '')" title="标题">
+                                <i class="fas fa-heading"></i>
+                            </button>
+                            <button class="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded" onclick="insertMarkdown('`', '`')" title="代码">
+                                <i class="fas fa-code"></i>
+                            </button>
+                            <button class="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded" onclick="insertMarkdown('[', '](url)')" title="链接">
+                                <i class="fas fa-link"></i>
+                            </button>
+                            <button class="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded" onclick="insertMarkdown('- ', '')" title="列表">
+                                <i class="fas fa-list"></i>
+                            </button>
+                            <div class="w-px h-6 bg-gray-300"></div>
+                            <button class="p-2 text-purple-600 hover:bg-purple-50 rounded" onclick="insertPaywall()" title="插入付费墙">
+                                <i class="fas fa-credit-card"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Markdown</span>
+                            <button class="p-1 text-gray-400 hover:text-gray-600" onclick="toggleFullscreen()" title="全屏">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 编辑器内容区 -->
+                <div class="editor-content">
+                    <textarea 
+                        id="markdown-editor" 
+                        class="w-full h-full p-4 border-0 focus:outline-none editor-textarea"
+                        placeholder="开始编写您的文章内容...
+
+支持标准 Markdown 语法：
+# 一级标题
+## 二级标题
+**粗体文本**
+*斜体文本*
+`代码`
+[链接文本](URL)
+- 列表项
+
+使用 <!--more--> 标记来设置付费墙位置"
+                        oninput="updatePreview(); autoSave()"></textarea>
+                </div>
+            </div>
+            
+            <!-- 右侧：实时预览 -->
+            <div class="w-1/2 bg-white">
+                <!-- 预览工具栏 -->
+                <div class="editor-toolbar">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <button class="tab-active px-3 py-1 text-sm rounded-t" onclick="switchPreviewMode('desktop')">
+                                <i class="fas fa-desktop mr-1"></i>
+                                桌面端
+                            </button>
+                            <button class="px-3 py-1 text-sm text-gray-600 hover:text-purple-600 rounded-t" onclick="switchPreviewMode('mobile')">
+                                <i class="fas fa-mobile-alt mr-1"></i>
+                                移动端
+                            </button>
+                        </div>
+                        
+                        <span class="text-xs text-gray-500">实时预览</span>
+                    </div>
+                </div>
+                
+                <!-- 预览内容区 -->
+                <div class="editor-content overflow-y-auto">
+                    <div id="preview-content" class="preview-content p-6">
+                        <p class="text-gray-500 text-center">开始编写内容，这里将显示实时预览...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 右侧设置面板 -->
+        <aside class="w-80 bg-white border-l border-gray-200 journal-shadow">
+            <div class="p-6 space-y-6">
+                <!-- 文章设置 -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">文章设置</h3>
+                    
+                    <!-- 文章标题 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">文章标题</label>
+                        <input type="text" 
+                               id="article-title"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                               placeholder="输入文章标题"
+                               oninput="updatePreview()">
+                    </div>
+                    
+                    <!-- 文章摘要 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">文章摘要</label>
+                        <textarea 
+                            id="article-excerpt"
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="输入文章摘要，用于搜索和列表展示"></textarea>
+                    </div>
+                    
+                    <!-- 分类选择 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">文章分类</label>
+                        <select id="article-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="">选择分类</option>
+                            <option value="frontend">前端开发</option>
+                            <option value="backend">后端开发</option>
+                            <option value="design">产品设计</option>
+                            <option value="devops">运维开发</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 标签输入 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">文章标签</label>
+                        <input type="text" 
+                               id="article-tags"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                               placeholder="输入标签，用逗号分隔">
+                        <p class="text-xs text-gray-500 mt-1">例如：React, JavaScript, 前端</p>
+                    </div>
+                </div>
+                
+                <!-- 付费设置 -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">付费设置</h3>
+                    
+                    <!-- 是否付费 -->
+                    <div class="mb-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="is-paid" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500" onchange="togglePaidSettings()">
+                            <span class="ml-2 text-sm text-gray-700">设为付费文章</span>
+                        </label>
+                    </div>
+                    
+                    <!-- 价格设置 -->
+                    <div id="price-settings" class="hidden">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">文章价格</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">¥</span>
+                                <input type="number" 
+                                       id="article-price"
+                                       step="0.1"
+                                       min="0"
+                                       class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                       placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 封面图片 -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">封面图片</h3>
+
+                    <div class="upload-area" id="cover-upload" onclick="document.getElementById('cover-input').click()">
+                        <div id="upload-placeholder">
+                            <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-sm text-gray-600">点击上传封面图片</p>
+                            <p class="text-xs text-gray-500">支持 JPG、PNG 格式，建议尺寸 1200x630</p>
+                        </div>
+                        <div id="cover-preview" class="hidden">
+                            <img id="cover-image" class="w-full h-32 object-cover rounded-lg mb-2" alt="封面预览">
+                            <button class="text-sm text-red-600 hover:text-red-700" onclick="removeCover(event)">
+                                <i class="fas fa-trash mr-1"></i>
+                                删除封面
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" id="cover-input" accept="image/*" class="hidden" onchange="handleCoverUpload(event)">
+                </div>
+
+                <!-- 发布设置 -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">发布设置</h3>
+
+                    <!-- 发布状态 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">发布状态</label>
+                        <select id="publish-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="draft">草稿</option>
+                            <option value="published">立即发布</option>
+                            <option value="scheduled">定时发布</option>
+                        </select>
+                    </div>
+
+                    <!-- 定时发布 -->
+                    <div id="schedule-settings" class="hidden mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">发布时间</label>
+                        <input type="datetime-local"
+                               id="publish-time"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+
+                    <!-- SEO设置 -->
+                    <div class="mb-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="seo-optimize" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500" checked>
+                            <span class="ml-2 text-sm text-gray-700">启用SEO优化</span>
+                        </label>
+                    </div>
+
+                    <!-- 评论设置 -->
+                    <div class="mb-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="allow-comments" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500" checked>
+                            <span class="ml-2 text-sm text-gray-700">允许评论</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 文件上传 -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Markdown文件</h3>
+
+                    <div class="upload-area" id="md-upload" onclick="document.getElementById('md-input').click()">
+                        <i class="fas fa-file-upload text-2xl text-gray-400 mb-2"></i>
+                        <p class="text-sm text-gray-600">上传Markdown文件</p>
+                        <p class="text-xs text-gray-500">支持 .md 格式，将自动解析内容</p>
+                    </div>
+                    <input type="file" id="md-input" accept=".md" class="hidden" onchange="handleMarkdownUpload(event)">
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        let autoSaveTimer;
+        let currentPreviewMode = 'desktop';
+
+        // Markdown转HTML的简单实现
+        function markdownToHtml(markdown) {
+            let html = markdown
+                // 标题
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                // 粗体和斜体
+                .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                // 代码
+                .replace(/`([^`]*)`/gim, '<code>$1</code>')
+                // 链接
+                .replace(/\[([^\]]*)\]\(([^\)]*)\)/gim, '<a href="$2" class="text-purple-600 hover:text-purple-700 underline">$1</a>')
+                // 列表
+                .replace(/^\- (.*$)/gim, '<li>$1</li>')
+                .replace(/(<li>.*<\/li>)/s, '<ul class="list-disc">$1</ul>')
+                // 段落
+                .replace(/\n\n/gim, '</p><p>')
+                // 付费墙标记
+                .replace(/<!--more-->/gim, '<div class="paywall-marker"><i class="fas fa-credit-card mr-2"></i>付费内容分割线</div>');
+
+            return `<p>${html}</p>`.replace(/<p><\/p>/g, '');
+        }
+
+        // 更新预览
+        function updatePreview() {
+            const title = document.getElementById('article-title').value;
+            const content = document.getElementById('markdown-editor').value;
+            const previewContainer = document.getElementById('preview-content');
+
+            let html = '';
+            if (title) {
+                html += `<h1>${title}</h1>`;
+            }
+
+            if (content) {
+                html += markdownToHtml(content);
+            } else {
+                html = '<p class="text-gray-500 text-center">开始编写内容，这里将显示实时预览...</p>';
+            }
+
+            previewContainer.innerHTML = html;
+        }
+
+        // 插入Markdown语法
+        function insertMarkdown(before, after) {
+            const editor = document.getElementById('markdown-editor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const selectedText = editor.value.substring(start, end);
+            const replacement = before + selectedText + after;
+
+            editor.value = editor.value.substring(0, start) + replacement + editor.value.substring(end);
+            editor.focus();
+            editor.setSelectionRange(start + before.length, start + before.length + selectedText.length);
+
+            updatePreview();
+        }
+
+        // 插入付费墙
+        function insertPaywall() {
+            const editor = document.getElementById('markdown-editor');
+            const cursorPos = editor.selectionStart;
+            const textBefore = editor.value.substring(0, cursorPos);
+            const textAfter = editor.value.substring(cursorPos);
+
+            editor.value = textBefore + '\n\n<!--more-->\n\n' + textAfter;
+            editor.focus();
+            editor.setSelectionRange(cursorPos + 13, cursorPos + 13);
+
+            updatePreview();
+        }
+
+        // 切换预览模式
+        function switchPreviewMode(mode) {
+            currentPreviewMode = mode;
+            const buttons = document.querySelectorAll('[onclick^="switchPreviewMode"]');
+            buttons.forEach(btn => btn.className = 'px-3 py-1 text-sm text-gray-600 hover:text-purple-600 rounded-t');
+            event.target.className = 'tab-active px-3 py-1 text-sm rounded-t';
+
+            const previewContent = document.getElementById('preview-content');
+            if (mode === 'mobile') {
+                previewContent.style.maxWidth = '375px';
+                previewContent.style.margin = '0 auto';
+            } else {
+                previewContent.style.maxWidth = 'none';
+                previewContent.style.margin = '0';
+            }
+        }
+
+        // 切换付费设置
+        function togglePaidSettings() {
+            const isPaid = document.getElementById('is-paid').checked;
+            const priceSettings = document.getElementById('price-settings');
+
+            if (isPaid) {
+                priceSettings.classList.remove('hidden');
+            } else {
+                priceSettings.classList.add('hidden');
+            }
+        }
+
+        // 处理封面上传
+        function handleCoverUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const placeholder = document.getElementById('upload-placeholder');
+                    const preview = document.getElementById('cover-preview');
+                    const image = document.getElementById('cover-image');
+
+                    image.src = e.target.result;
+                    placeholder.classList.add('hidden');
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 删除封面
+        function removeCover(event) {
+            event.stopPropagation();
+            const placeholder = document.getElementById('upload-placeholder');
+            const preview = document.getElementById('cover-preview');
+            const input = document.getElementById('cover-input');
+
+            placeholder.classList.remove('hidden');
+            preview.classList.add('hidden');
+            input.value = '';
+        }
+
+        // 处理Markdown文件上传
+        function handleMarkdownUpload(event) {
+            const file = event.target.files[0];
+            if (file && file.name.endsWith('.md')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    const editor = document.getElementById('markdown-editor');
+
+                    // 尝试提取标题
+                    const lines = content.split('\n');
+                    const firstLine = lines[0];
+                    if (firstLine.startsWith('# ')) {
+                        document.getElementById('article-title').value = firstLine.substring(2);
+                        editor.value = lines.slice(1).join('\n').trim();
+                    } else {
+                        editor.value = content;
+                    }
+
+                    updatePreview();
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // 自动保存
+        function autoSave() {
+            clearTimeout(autoSaveTimer);
+
+            const indicator = document.getElementById('auto-save-indicator');
+            indicator.classList.add('show', 'saving');
+            indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>保存中...</span>';
+
+            autoSaveTimer = setTimeout(() => {
+                // 这里应该调用API保存草稿
+                indicator.classList.remove('saving');
+                indicator.innerHTML = '<i class="fas fa-check-circle"></i><span>已自动保存</span>';
+
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                }, 2000);
+            }, 1000);
+        }
+
+        // 保存草稿
+        function saveDraft() {
+            // 收集表单数据
+            const articleData = {
+                title: document.getElementById('article-title').value,
+                content: document.getElementById('markdown-editor').value,
+                excerpt: document.getElementById('article-excerpt').value,
+                category: document.getElementById('article-category').value,
+                tags: document.getElementById('article-tags').value,
+                isPaid: document.getElementById('is-paid').checked,
+                price: document.getElementById('article-price').value,
+                status: 'draft'
+            };
+
+            // 这里应该调用API保存
+            console.log('保存草稿:', articleData);
+            alert('草稿已保存');
+        }
+
+        // 预览文章
+        function previewArticle() {
+            // 在新窗口打开预览
+            window.open('文章预览.html', '_blank');
+        }
+
+        // 发布文章
+        function publishArticle() {
+            const title = document.getElementById('article-title').value;
+            const content = document.getElementById('markdown-editor').value;
+
+            if (!title || !content) {
+                alert('请填写文章标题和内容');
+                return;
+            }
+
+            if (confirm('确定要发布这篇文章吗？')) {
+                // 收集表单数据
+                const articleData = {
+                    title: title,
+                    content: content,
+                    excerpt: document.getElementById('article-excerpt').value,
+                    category: document.getElementById('article-category').value,
+                    tags: document.getElementById('article-tags').value,
+                    isPaid: document.getElementById('is-paid').checked,
+                    price: document.getElementById('article-price').value,
+                    status: 'published',
+                    publishTime: new Date().toISOString()
+                };
+
+                // 这里应该调用API发布
+                console.log('发布文章:', articleData);
+                alert('文章发布成功！');
+                window.location.href = '后台文章管理.html';
+            }
+        }
+
+        // 切换用户菜单
+        function toggleUserMenu() {
+            // 实现用户菜单切换逻辑
+        }
+
+        // 全屏切换
+        function toggleFullscreen() {
+            // 实现全屏编辑器逻辑
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 监听发布状态变化
+            document.getElementById('publish-status').addEventListener('change', function() {
+                const scheduleSettings = document.getElementById('schedule-settings');
+                if (this.value === 'scheduled') {
+                    scheduleSettings.classList.remove('hidden');
+                } else {
+                    scheduleSettings.classList.add('hidden');
+                }
+            });
+
+            // 设置默认发布时间
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+            document.getElementById('publish-time').value = now.toISOString().slice(0, 16);
+
+            // 拖拽上传支持
+            const uploadAreas = document.querySelectorAll('.upload-area');
+            uploadAreas.forEach(area => {
+                area.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
+                });
+
+                area.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                });
+
+                area.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        if (this.id === 'cover-upload' && file.type.startsWith('image/')) {
+                            const event = { target: { files: [file] } };
+                            handleCoverUpload(event);
+                        } else if (this.id === 'md-upload' && file.name.endsWith('.md')) {
+                            const event = { target: { files: [file] } };
+                            handleMarkdownUpload(event);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

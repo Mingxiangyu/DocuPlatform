@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的笔记 - DocuVault</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        purple: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Crimson Text', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-primary {
+                @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:border-purple-300 hover:bg-purple-50 text-gray-700 hover:text-purple-600 font-medium transition-all duration-300;
+            }
+            .nav-active {
+                @apply bg-purple-50 text-purple-600 border-l-4 border-purple-500;
+            }
+            .highlight-yellow {
+                @apply bg-yellow-200 border-l-2 border-yellow-400 px-1 rounded;
+            }
+            .highlight-blue {
+                @apply bg-blue-200 border-l-2 border-blue-400 px-1 rounded;
+            }
+            .highlight-green {
+                @apply bg-green-200 border-l-2 border-green-400 px-1 rounded;
+            }
+        }
+    </style>
+    
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        }
+        
+        .journal-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .journal-shadow-hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .note-card {
+            transition: all 0.3s ease;
+        }
+        
+        .note-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .note-content {
+            font-family: 'Crimson Text', Georgia, serif;
+            line-height: 1.7;
+        }
+        
+        .article-group {
+            border-left: 3px solid #e5e7eb;
+            transition: border-color 0.3s ease;
+        }
+        
+        .article-group:hover {
+            border-left-color: #a855f7;
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .view-toggle-active {
+            @apply bg-purple-100 text-purple-700 border-purple-300;
+        }
+        
+        .view-toggle-inactive {
+            @apply bg-white text-gray-600 border-gray-300 hover:bg-purple-50 hover:text-purple-600;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200 journal-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="首页页参考界面.html" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900 font-serif">DocuVault</h1>
+                    </a>
+                </div>
+                
+                <!-- 搜索栏 -->
+                <div class="flex-1 max-w-lg mx-8">
+                    <div class="relative">
+                        <input type="text" 
+                               placeholder="搜索笔记内容..."
+                               id="search-notes"
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <!-- 用户操作 -->
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-600 hover:text-purple-600 transition-colors duration-300">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                    <button class="text-gray-600 hover:text-purple-600 transition-colors duration-300">
+                        <i class="fas fa-bookmark"></i>
+                    </button>
+                    <div class="relative">
+                        <button class="flex items-center space-x-2">
+                            <img class="w-8 h-8 rounded-full border-2 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="用户头像">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- 侧边栏 -->
+            <div class="lg:col-span-1">
+                <!-- 个人信息卡片 -->
+                <div class="bg-white rounded-lg journal-shadow p-6 mb-6">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="relative mb-4">
+                            <img class="w-24 h-24 rounded-full border-4 border-purple-100" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=128&h=128&fit=crop&crop=face" alt="用户头像">
+                            <button class="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center border border-gray-200 text-gray-500 hover:text-purple-600 hover:border-purple-300 transition-all duration-300">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 font-serif mb-1">张小明</h3>
+                        <p class="text-sm text-gray-500 mb-3">前端开发工程师 @科技公司</p>
+                        <div class="flex items-center space-x-2 text-amber-500 text-sm mb-4">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                            <span class="text-gray-600 ml-1">4.5 (128评价)</span>
+                        </div>
+                        <button class="w-full btn-primary py-2 px-4 rounded-lg text-sm">
+                            编辑个人资料
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 导航菜单 -->
+                <div class="bg-white rounded-lg journal-shadow overflow-hidden">
+                    <ul class="divide-y divide-gray-100">
+                        <li>
+                            <a href="个人中心.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-user-circle w-5 text-center"></i>
+                                <span>个人中心</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的购买.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-shopping-bag w-5 text-center"></i>
+                                <span>我的购买</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的点赞.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-bookmark w-5 text-center"></i>
+                                <span>我的收藏</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的点赞.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-heart w-5 text-center"></i>
+                                <span>我的点赞</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的笔记.html" class="nav-active flex items-center space-x-3 px-6 py-3 text-sm">
+                                <i class="fas fa-sticky-note w-5 text-center"></i>
+                                <span>我的笔记</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的工具箱.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-tools w-5 text-center"></i>
+                                <span>我的工具箱</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="我的购买.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-credit-card w-5 text-center"></i>
+                                <span>我的订单</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="账户设置页.html" class="flex items-center space-x-3 px-6 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-300">
+                                <i class="fas fa-cog w-5 text-center"></i>
+                                <span>账户设置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 主内容区域 -->
+            <div class="lg:col-span-3">
+                <!-- 页面标题和统计 -->
+                <div class="mb-8">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900 font-serif mb-2">我的笔记</h1>
+                            <p class="text-gray-600">管理您的阅读笔记和划线内容，构建个人知识库</p>
+                        </div>
+                        
+                        <!-- 统计信息 -->
+                        <div class="flex items-center space-x-6 mt-4 md:mt-0">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-purple-600" id="total-notes">42</div>
+                                <div class="text-sm text-gray-500">总笔记</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-amber-600" id="total-highlights">128</div>
+                                <div class="text-sm text-gray-500">总划线</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600" id="articles-noted">8</div>
+                                <div class="text-sm text-gray-500">文章数</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 视图切换和筛选 -->
+                    <div class="bg-white rounded-lg journal-shadow p-6 mb-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                            <!-- 视图切换 -->
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-600">视图：</span>
+                                <button class="view-toggle view-toggle-active border px-3 py-1 rounded-lg text-sm transition-all duration-300" data-view="grouped">
+                                    <i class="fas fa-layer-group mr-1"></i>
+                                    按文章分组
+                                </button>
+                                <button class="view-toggle view-toggle-inactive border px-3 py-1 rounded-lg text-sm transition-all duration-300" data-view="timeline">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    时间线
+                                </button>
+                            </div>
+                            
+                            <!-- 筛选选项 -->
+                            <div class="flex items-center space-x-4">
+                                <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent" id="filter-type">
+                                    <option value="all">全部类型</option>
+                                    <option value="highlight">仅划线</option>
+                                    <option value="note">仅笔记</option>
+                                    <option value="both">划线+笔记</option>
+                                </select>
+                                
+                                <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent" id="sort-order">
+                                    <option value="newest">最新创建</option>
+                                    <option value="oldest">最早创建</option>
+                                    <option value="article">按文章排序</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 笔记内容区域 -->
+                <div id="notes-container">
+                    <!-- 笔记内容将通过JavaScript动态加载 -->
+                </div>
+                
+                <!-- 加载更多 -->
+                <div class="text-center mt-8">
+                    <button class="btn-secondary px-6 py-3 rounded-lg" id="load-more">
+                        <i class="fas fa-plus mr-2"></i>
+                        加载更多笔记
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 笔记数据
+            const notesData = [
+                {
+                    id: 1,
+                    articleId: 1,
+                    articleTitle: 'Modern React Hooks 完全指南',
+                    articleAuthor: '张三',
+                    type: 'both', // highlight, note, both
+                    highlightText: 'useState 是 React 中最基础也是最重要的 Hook，它允许函数组件拥有自己的状态。',
+                    noteText: '这个概念很重要，useState 确实是 React Hooks 的基础。需要深入理解其工作原理。',
+                    highlightColor: 'yellow',
+                    createdAt: '2024-12-08 14:30',
+                    position: '第2章 - useState 详解'
+                },
+                {
+                    id: 2,
+                    articleId: 1,
+                    articleTitle: 'Modern React Hooks 完全指南',
+                    articleAuthor: '张三',
+                    type: 'highlight',
+                    highlightText: 'useEffect 的依赖数组是性能优化的关键，错误的依赖配置可能导致无限循环或内存泄漏。',
+                    noteText: '',
+                    highlightColor: 'blue',
+                    createdAt: '2024-12-08 14:45',
+                    position: '第3章 - useEffect 副作用处理'
+                },
+                {
+                    id: 3,
+                    articleId: 2,
+                    articleTitle: 'TypeScript 高级类型系统详解',
+                    articleAuthor: '王五',
+                    type: 'note',
+                    highlightText: '泛型约束（Generic Constraints）允许我们限制泛型参数必须满足某些条件。',
+                    noteText: '泛型约束的使用场景很多，特别是在编写工具函数时。可以结合 keyof 操作符实现更强大的类型推导。',
+                    highlightColor: 'green',
+                    createdAt: '2024-12-05 16:20',
+                    position: '第4章 - 泛型进阶'
+                },
+                {
+                    id: 4,
+                    articleId: 1,
+                    articleTitle: 'Modern React Hooks 完全指南',
+                    articleAuthor: '张三',
+                    type: 'both',
+                    highlightText: '自定义 Hook 的命名必须以 "use" 开头，这是 React 的约定，也是 ESLint 规则检查的依据。',
+                    noteText: '命名约定很重要，不仅是为了规范，也是为了让 React 的开发工具能够正确识别和处理 Hook。',
+                    highlightColor: 'yellow',
+                    createdAt: '2024-12-08 15:10',
+                    position: '第6章 - 自定义 Hooks 开发'
+                },
+                {
+                    id: 5,
+                    articleId: 3,
+                    articleTitle: 'Node.js 微服务架构实战',
+                    articleAuthor: '赵六',
+                    type: 'highlight',
+                    highlightText: '服务发现是微服务架构中的核心组件，它解决了服务实例动态变化的问题。',
+                    noteText: '',
+                    highlightColor: 'blue',
+                    createdAt: '2024-11-30 10:15',
+                    position: '第2章 - 服务发现机制'
+                }
+            ];
+
+            let currentView = 'grouped';
+            let currentFilter = 'all';
+            let currentSort = 'newest';
+            let searchTerm = '';
+
+            // 按文章分组笔记
+            function groupNotesByArticle(notes) {
+                const grouped = {};
+                notes.forEach(note => {
+                    if (!grouped[note.articleId]) {
+                        grouped[note.articleId] = {
+                            articleTitle: note.articleTitle,
+                            articleAuthor: note.articleAuthor,
+                            notes: []
+                        };
+                    }
+                    grouped[note.articleId].notes.push(note);
+                });
+                return grouped;
+            }
+
+            // 渲染分组视图
+            function renderGroupedView(notes) {
+                const grouped = groupNotesByArticle(notes);
+                const container = document.getElementById('notes-container');
+
+                if (Object.keys(grouped).length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-16">
+                            <div class="w-24 h-24 mx-auto mb-4 text-gray-300">
+                                <i class="fas fa-sticky-note text-6xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">暂无笔记</h3>
+                            <p class="text-gray-600 mb-6">开始阅读文章并添加笔记吧</p>
+                            <a href="文章列表页.html" class="btn-primary px-6 py-3 rounded-lg inline-flex items-center">
+                                <i class="fas fa-book-open mr-2"></i>
+                                去阅读文章
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const groupsHTML = Object.entries(grouped).map(([articleId, group]) => `
+                    <div class="article-group bg-white rounded-lg journal-shadow mb-6 overflow-hidden" data-component="note-group">
+                        <!-- 文章头部 -->
+                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-1">${group.articleTitle}</h3>
+                                    <p class="text-sm text-gray-600">作者：${group.articleAuthor} · ${group.notes.length} 条笔记</p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button class="btn-secondary px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-external-link-alt mr-1"></i>
+                                        查看原文
+                                    </button>
+                                    <button class="text-gray-400 hover:text-gray-600 transition-colors duration-300">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 笔记列表 -->
+                        <div class="divide-y divide-gray-100">
+                            ${group.notes.map(note => `
+                                <div class="note-card p-6" data-component="note-item" data-note-id="${note.id}">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs text-gray-500">${note.position}</span>
+                                            <span class="text-xs text-gray-300">•</span>
+                                            <span class="text-xs text-gray-500">${note.createdAt}</span>
+                                            ${note.type === 'both' ? `
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                                                    <i class="fas fa-highlighter mr-1"></i>
+                                                    <i class="fas fa-sticky-note ml-1"></i>
+                                                </span>
+                                            ` : note.type === 'highlight' ? `
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                                                    <i class="fas fa-highlighter mr-1"></i>
+                                                    划线
+                                                </span>
+                                            ` : `
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                                    <i class="fas fa-sticky-note mr-1"></i>
+                                                    笔记
+                                                </span>
+                                            `}
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="text-gray-400 hover:text-purple-600 transition-colors duration-300" title="编辑">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-gray-400 hover:text-red-600 transition-colors duration-300" title="删除">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    ${note.highlightText ? `
+                                        <div class="highlight-${note.highlightColor} p-3 rounded-lg mb-3 note-content">
+                                            "${note.highlightText}"
+                                        </div>
+                                    ` : ''}
+
+                                    ${note.noteText ? `
+                                        <div class="bg-gray-50 p-3 rounded-lg note-content">
+                                            <div class="flex items-center mb-2">
+                                                <i class="fas fa-user-edit text-purple-600 mr-2"></i>
+                                                <span class="text-sm font-medium text-gray-700">我的想法</span>
+                                            </div>
+                                            <p class="text-gray-700">${note.noteText}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = groupsHTML;
+            }
+
+            // 渲染时间线视图
+            function renderTimelineView(notes) {
+                const container = document.getElementById('notes-container');
+
+                if (notes.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-16">
+                            <div class="w-24 h-24 mx-auto mb-4 text-gray-300">
+                                <i class="fas fa-clock text-6xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">暂无笔记</h3>
+                            <p class="text-gray-600">您的笔记时间线将在这里显示</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const timelineHTML = notes.map(note => `
+                    <div class="note-card bg-white rounded-lg journal-shadow p-6 mb-4" data-component="note-timeline-item">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-1">${note.articleTitle}</h4>
+                                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                                    <span>${note.position}</span>
+                                    <span>•</span>
+                                    <span>${note.createdAt}</span>
+                                    <span>•</span>
+                                    <span>作者：${note.articleAuthor}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                ${note.type === 'both' ? `
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                                        <i class="fas fa-highlighter mr-1"></i>
+                                        <i class="fas fa-sticky-note ml-1"></i>
+                                    </span>
+                                ` : note.type === 'highlight' ? `
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                                        <i class="fas fa-highlighter mr-1"></i>
+                                        划线
+                                    </span>
+                                ` : `
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                        <i class="fas fa-sticky-note mr-1"></i>
+                                        笔记
+                                    </span>
+                                `}
+                            </div>
+                        </div>
+
+                        ${note.highlightText ? `
+                            <div class="highlight-${note.highlightColor} p-3 rounded-lg mb-3 note-content">
+                                "${note.highlightText}"
+                            </div>
+                        ` : ''}
+
+                        ${note.noteText ? `
+                            <div class="bg-gray-50 p-3 rounded-lg note-content">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-user-edit text-purple-600 mr-2"></i>
+                                    <span class="text-sm font-medium text-gray-700">我的想法</span>
+                                </div>
+                                <p class="text-gray-700">${note.noteText}</p>
+                            </div>
+                        ` : ''}
+
+                        <div class="flex items-center justify-between mt-4">
+                            <button class="btn-secondary px-3 py-1 rounded text-sm">
+                                <i class="fas fa-external-link-alt mr-1"></i>
+                                查看原文
+                            </button>
+                            <div class="flex items-center space-x-2">
+                                <button class="text-gray-400 hover:text-purple-600 transition-colors duration-300" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-gray-400 hover:text-red-600 transition-colors duration-300" title="删除">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = timelineHTML;
+            }
+
+            // 显示加载状态
+            function showLoadingState() {
+                const container = document.getElementById('notes-container');
+                const skeletonHTML = Array(3).fill().map(() => `
+                    <div class="bg-white rounded-lg journal-shadow p-6 mb-4">
+                        <div class="skeleton h-4 bg-gray-200 rounded mb-3 w-1/3"></div>
+                        <div class="skeleton h-20 bg-gray-200 rounded mb-3 w-full"></div>
+                        <div class="skeleton h-16 bg-gray-200 rounded w-full"></div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = skeletonHTML;
+            }
+
+            // 筛选和排序笔记
+            function filterAndSortNotes() {
+                let filtered = [...notesData];
+
+                // 按类型筛选
+                if (currentFilter !== 'all') {
+                    filtered = filtered.filter(note => {
+                        if (currentFilter === 'highlight') return note.type === 'highlight' || note.type === 'both';
+                        if (currentFilter === 'note') return note.type === 'note' || note.type === 'both';
+                        if (currentFilter === 'both') return note.type === 'both';
+                        return true;
+                    });
+                }
+
+                // 按搜索词筛选
+                if (searchTerm) {
+                    filtered = filtered.filter(note =>
+                        note.highlightText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        note.noteText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        note.articleTitle.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                }
+
+                // 排序
+                filtered.sort((a, b) => {
+                    if (currentSort === 'newest') {
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    } else if (currentSort === 'oldest') {
+                        return new Date(a.createdAt) - new Date(b.createdAt);
+                    } else if (currentSort === 'article') {
+                        return a.articleTitle.localeCompare(b.articleTitle);
+                    }
+                    return 0;
+                });
+
+                return filtered;
+            }
+
+            // 更新视图
+            function updateView() {
+                showLoadingState();
+
+                setTimeout(() => {
+                    const filtered = filterAndSortNotes();
+
+                    if (currentView === 'grouped') {
+                        renderGroupedView(filtered);
+                    } else {
+                        renderTimelineView(filtered);
+                    }
+                }, 500);
+            }
+
+            // 更新视图切换按钮状态
+            function updateViewToggle() {
+                const toggles = document.querySelectorAll('.view-toggle');
+                toggles.forEach(toggle => {
+                    const view = toggle.dataset.view;
+                    if (view === currentView) {
+                        toggle.className = 'view-toggle view-toggle-active border px-3 py-1 rounded-lg text-sm transition-all duration-300';
+                    } else {
+                        toggle.className = 'view-toggle view-toggle-inactive border px-3 py-1 rounded-lg text-sm transition-all duration-300';
+                    }
+                });
+            }
+
+            // 事件监听器
+
+            // 视图切换
+            document.querySelectorAll('.view-toggle').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    currentView = this.dataset.view;
+                    updateViewToggle();
+                    updateView();
+                });
+            });
+
+            // 筛选器
+            document.getElementById('filter-type').addEventListener('change', function() {
+                currentFilter = this.value;
+                updateView();
+            });
+
+            document.getElementById('sort-order').addEventListener('change', function() {
+                currentSort = this.value;
+                updateView();
+            });
+
+            // 搜索功能
+            const searchInput = document.getElementById('search-notes');
+            searchInput.addEventListener('input', function() {
+                searchTerm = this.value.trim();
+
+                // 防抖处理
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    updateView();
+                }, 500);
+            });
+
+            // 加载更多
+            document.getElementById('load-more').addEventListener('click', function() {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>加载中...';
+                this.disabled = true;
+
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-plus mr-2"></i>加载更多笔记';
+                    this.disabled = false;
+                }, 1500);
+            });
+
+            // 初始化页面
+            updateViewToggle();
+            updateView();
+        });
+    </script>
+</body>
+</html>
