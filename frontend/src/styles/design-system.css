@@ -1,0 +1,331 @@
+/**
+ * 设计系统基础样式
+ * DocuVault知识付费平台设计系统核心CSS
+ */
+
+/* 字体导入 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
+
+/* CSS变量定义 - 由ThemeProvider动态注入 */
+:root {
+  /* 颜色变量 */
+  --color-primary-50: #faf5ff;
+  --color-primary-100: #f3e8ff;
+  --color-primary-200: #e9d5ff;
+  --color-primary-300: #d8b4fe;
+  --color-primary-400: #c084fc;
+  --color-primary-500: #a855f7;
+  --color-primary-600: #9333ea;
+  --color-primary-700: #7c3aed;
+  --color-primary-800: #6b21a8;
+  --color-primary-900: #581c87;
+  
+  /* 渐变变量 */
+  --gradient-hero: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #e9d5ff 100%);
+  --gradient-card: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  --gradient-button: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  --gradient-text: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  
+  /* 间距变量 */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+  
+  /* 阴影变量 */
+  --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-soft: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-large: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-floating: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 0 1px rgba(168, 85, 247, 0.05), 0 4px 16px rgba(168, 85, 247, 0.12);
+  
+  /* 动画变量 */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  /* 字体变量 */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Crimson Text', Georgia, serif;
+  --font-mono: 'JetBrains Mono', Menlo, Monaco, monospace;
+  
+  /* 圆角变量 */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+}
+
+/* 暗色主题变量 */
+[data-theme="dark"] {
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-border: #334155;
+  
+  --gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  --gradient-card: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+}
+
+/* 亮色主题变量 */
+[data-theme="light"] {
+  --color-bg: #ffffff;
+  --color-surface: #f8fafc;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+}
+
+/* 全局重置和基础样式 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  background-color: var(--color-bg, #ffffff);
+  color: var(--color-text, #0f172a);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 设计系统初始化标记 */
+.design-system-initialized {
+  --ds-ready: true;
+}
+
+/* 主题过渡动画 */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: 
+    background-color var(--duration-normal) var(--easing-smooth),
+    color var(--duration-normal) var(--easing-smooth),
+    border-color var(--duration-normal) var(--easing-smooth),
+    box-shadow var(--duration-normal) var(--easing-smooth) !important;
+}
+
+/* 减少动画偏好设置 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .theme-transitioning,
+  .theme-transitioning * {
+    transition: none !important;
+  }
+}
+
+/* 高对比度偏好设置 */
+@media (prefers-contrast: high) {
+  :root {
+    --shadow-subtle: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+    --shadow-soft: 0 2px 6px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.12);
+    --shadow-medium: 0 8px 12px -2px rgba(0, 0, 0, 0.2), 0 4px 8px -2px rgba(0, 0, 0, 0.12);
+  }
+  
+  .focus-ring:focus {
+    outline: 2px solid var(--color-primary-600) !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* 焦点管理 */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-primary-600);
+  outline-offset: 2px;
+}
+
+/* 选择样式 */
+::selection {
+  background-color: rgba(168, 85, 247, 0.2);
+  color: var(--color-text);
+}
+
+::-moz-selection {
+  background-color: rgba(168, 85, 247, 0.2);
+  color: var(--color-text);
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface, #f8fafc);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border, #e2e8f0);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted, #64748b);
+}
+
+/* 组件基础样式 */
+.ds-card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  transition: all var(--duration-normal) var(--easing-smooth);
+}
+
+.ds-card:hover {
+  box-shadow: var(--shadow-medium);
+  transform: translateY(-1px);
+}
+
+.ds-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--easing-smooth);
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+}
+
+.ds-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+
+.ds-button--primary {
+  background: var(--gradient-button);
+  color: white;
+}
+
+.ds-button--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.ds-button--primary:active {
+  transform: translateY(0);
+}
+
+.ds-input {
+  width: 100%;
+  padding: 0.75rem;
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--easing-smooth);
+}
+
+.ds-input:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+
+/* 工具类 */
+.text-gradient {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-gradient {
+  background: var(--gradient-hero);
+}
+
+.card-hover {
+  transition: all var(--duration-normal) var(--easing-smooth);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-floating);
+}
+
+/* 动画类 */
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s var(--easing-smooth) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s var(--easing-smooth) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s var(--easing-smooth) forwards;
+}
+
+/* 响应式工具 */
+@media (max-width: 640px) {
+  .ds-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .ds-card {
+    margin: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --spacing-xl: 1.5rem;
+    --spacing-2xl: 2rem;
+    --spacing-3xl: 2.5rem;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .ds-button,
+  .card-hover {
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  
+  .text-gradient {
+    -webkit-text-fill-color: var(--color-text) !important;
+    background: none !important;
+  }
+}

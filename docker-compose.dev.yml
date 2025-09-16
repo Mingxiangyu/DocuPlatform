@@ -1,0 +1,213 @@
+# DocuVault 开发环境完整技术栈
+# 包含前端、后端、数据库、缓存等所有服务
+
+version: '3.8'
+
+services:
+  # 前端服务 (Vue 3)
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: docuvault-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8000/api
+      - VITE_MOCK_API=false
+      - VITE_ENABLE_MOCK_DATA=false
+      - VITE_ENABLE_VIRTUAL_DOM_HIGHLIGHTING=true
+      - VITE_ENABLE_PERFORMANCE_MONITORING=true
+      - VITE_DEBUG_MODE=true
+      - VITE_EVENT_BUS_DEBUG=true
+    depends_on:
+      - backend
+    networks:
+      - docuvault-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # 后端API服务 (Node.js/Express)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: docuvault-backend-dev
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+      - "9229:9229"  # Node.js调试端口
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://docuvault:dev_password_2024@postgres:5432/docuvault
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=dev-jwt-secret-key-change-in-production-2024
+      - JWT_EXPIRES_IN=7d
+      - REFRESH_TOKEN_EXPIRES_IN=30d
+      - FRONTEND_URL=http://localhost:3000
+      - CORS_ORIGIN=http://localhost:3000
+      - UPLOAD_MAX_SIZE=10485760
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+      - LOG_LEVEL=debug
+      - STRIPE_SECRET_KEY=sk_test_dummy_key_for_development
+      - STRIPE_WEBHOOK_SECRET=whsec_dummy_webhook_secret
+      - EMAIL_SERVICE_API_KEY=dummy_email_api_key
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - docuvault-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: docuvault-postgres-dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=docuvault
+      - POSTGRES_USER=docuvault
+      - POSTGRES_PASSWORD=dev_password_2024
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./database/backups:/backups
+    networks:
+      - docuvault-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docuvault -d docuvault"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: >
+      postgres
+      -c log_statement=all
+      -c log_destination=stderr
+      -c log_min_duration_statement=0
+      -c max_connections=100
+      -c shared_buffers=128MB
+      -c effective_cache_size=512MB
+      -c maintenance_work_mem=32MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=8MB
+      -c default_statistics_target=100
+
+  # Redis 缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: docuvault-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+      - ./redis/redis-dev.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - docuvault-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  # 数据库管理工具 (pgAdmin)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: docuvault-pgadmin-dev
+    restart: unless-stopped
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@docuvault.dev
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_dev_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - docuvault-network
+    profiles:
+      - tools
+
+  # Redis 管理工具 (RedisInsight)
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: docuvault-redis-insight-dev
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    volumes:
+      - redis_insight_data:/db
+    depends_on:
+      - redis
+    networks:
+      - docuvault-network
+    profiles:
+      - tools
+
+  # 邮件服务模拟器 (MailHog)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: docuvault-mailhog-dev
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP端口
+      - "8025:8025"  # Web界面端口
+    networks:
+      - docuvault-network
+    profiles:
+      - tools
+
+# 网络配置
+networks:
+  docuvault-network:
+    driver: bridge
+    name: docuvault-dev-network
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+# 数据卷
+volumes:
+  postgres_dev_data:
+    driver: local
+    name: docuvault_postgres_dev_data
+  redis_dev_data:
+    driver: local
+    name: docuvault_redis_dev_data
+  pgadmin_dev_data:
+    driver: local
+    name: docuvault_pgadmin_dev_data
+  redis_insight_data:
+    driver: local
+    name: docuvault_redis_insight_data

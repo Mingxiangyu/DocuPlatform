@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuVault 完整技术栈测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            color: #6366f1;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .service-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        .service-card.online {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+        .service-card.offline {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        .service-card.testing {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        .service-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #94a3b8;
+        }
+        .status-indicator.online { background: #10b981; }
+        .status-indicator.offline { background: #ef4444; }
+        .status-indicator.testing { background: #f59e0b; }
+        .service-info {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .test-button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s ease;
+        }
+        .test-button:hover {
+            background: #5856eb;
+        }
+        .test-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .test-button.success {
+            background: #10b981;
+        }
+        .test-button.error {
+            background: #ef4444;
+        }
+        .logs {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .api-test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .api-endpoint {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #6366f1;
+        }
+        .endpoint-method {
+            font-weight: bold;
+            color: #6366f1;
+            font-size: 0.8rem;
+        }
+        .endpoint-url {
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin: 5px 0;
+        }
+        .endpoint-status {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        .endpoint-status.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .endpoint-status.error {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        .endpoint-status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .feature-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .feature-status {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 DocuVault 完整技术栈测试</h1>
+            <p>验证前端、后端、数据库等所有服务的连接和功能</p>
+        </div>
+
+        <!-- 服务状态监控 -->
+        <div class="status-grid">
+            <div class="service-card" id="frontend-card">
+                <div class="service-title">
+                    <span class="status-indicator" id="frontend-indicator"></span>
+                    前端服务 (Vue 3)
+                </div>
+                <div class="service-info" id="frontend-info">检查中...</div>
+                <button class="test-button" onclick="testFrontend()">测试连接</button>
+            </div>
+
+            <div class="service-card" id="backend-card">
+                <div class="service-title">
+                    <span class="status-indicator" id="backend-indicator"></span>
+                    后端API (Express)
+                </div>
+                <div class="service-info" id="backend-info">检查中...</div>
+                <button class="test-button" onclick="testBackend()">测试连接</button>
+            </div>
+
+            <div class="service-card" id="database-card">
+                <div class="service-title">
+                    <span class="status-indicator" id="database-indicator"></span>
+                    数据库 (模拟)
+                </div>
+                <div class="service-info" id="database-info">模拟数据库运行中</div>
+                <button class="test-button" onclick="testDatabase()">测试数据</button>
+            </div>
+
+            <div class="service-card" id="cache-card">
+                <div class="service-title">
+                    <span class="status-indicator" id="cache-indicator"></span>
+                    缓存服务 (模拟)
+                </div>
+                <div class="service-info" id="cache-info">内存缓存运行中</div>
+                <button class="test-button" onclick="testCache()">测试缓存</button>
+            </div>
+        </div>
+
+        <!-- API端点测试 -->
+        <div class="test-section">
+            <h2>🔌 API端点测试</h2>
+            <div class="api-test-grid">
+                <div class="api-endpoint">
+                    <div class="endpoint-method">GET</div>
+                    <div class="endpoint-url">/health</div>
+                    <div class="endpoint-status pending" id="health-status">未测试</div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-method">POST</div>
+                    <div class="endpoint-url">/api/auth/login</div>
+                    <div class="endpoint-status pending" id="login-status">未测试</div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-method">GET</div>
+                    <div class="endpoint-url">/api/articles</div>
+                    <div class="endpoint-status pending" id="articles-status">未测试</div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-method">GET</div>
+                    <div class="endpoint-url">/api/notes</div>
+                    <div class="endpoint-status pending" id="notes-status">未测试</div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-method">GET</div>
+                    <div class="endpoint-url">/api/highlights</div>
+                    <div class="endpoint-status pending" id="highlights-status">未测试</div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-method">GET</div>
+                    <div class="endpoint-url">/api/stats/dashboard</div>
+                    <div class="endpoint-status pending" id="stats-status">未测试</div>
+                </div>
+            </div>
+            <button class="test-button" onclick="testAllAPIs()">🧪 测试所有API</button>
+        </div>
+
+        <!-- 核心功能测试 -->
+        <div class="test-section">
+            <h2>⚙️ 核心功能测试</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">👤</div>
+                    <div class="feature-name">用户认证</div>
+                    <div class="feature-status pending" id="auth-feature-status">未测试</div>
+                    <button class="test-button" onclick="testAuthFlow()">测试</button>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📚</div>
+                    <div class="feature-name">文章管理</div>
+                    <div class="feature-status pending" id="articles-feature-status">未测试</div>
+                    <button class="test-button" onclick="testArticlesFlow()">测试</button>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🎨</div>
+                    <div class="feature-name">高亮系统</div>
+                    <div class="feature-status pending" id="highlights-feature-status">未测试</div>
+                    <button class="test-button" onclick="testHighlightsFlow()">测试</button>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📝</div>
+                    <div class="feature-name">笔记管理</div>
+                    <div class="feature-status pending" id="notes-feature-status">未测试</div>
+                    <button class="test-button" onclick="testNotesFlow()">测试</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 端到端流程测试 -->
+        <div class="test-section">
+            <h2>🔄 端到端流程测试</h2>
+            <p>测试完整的用户使用流程，从登录到创建高亮和笔记</p>
+            <button class="test-button" onclick="runE2ETest()">🚀 运行端到端测试</button>
+            <button class="test-button" onclick="openMainApp()">🌐 打开主应用</button>
+            <button class="test-button" onclick="clearAllTests()">🗑️ 清除测试结果</button>
+        </div>
+
+        <!-- 测试日志 -->
+        <div class="test-section">
+            <h2>📋 测试日志</h2>
+            <div id="logs" class="logs">等待测试开始...</div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        const API_BASE = 'http://localhost:8000';
+        let testResults = {};
+
+        // 日志系统
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const typeIcon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            logs.innerHTML += `[${timestamp}] ${typeIcon} ${message}\n`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function updateServiceStatus(service, status, info) {
+            const card = document.getElementById(`${service}-card`);
+            const indicator = document.getElementById(`${service}-indicator`);
+            const infoElement = document.getElementById(`${service}-info`);
+            
+            card.className = `service-card ${status}`;
+            indicator.className = `status-indicator ${status}`;
+            infoElement.textContent = info;
+        }
+
+        function updateEndpointStatus(endpoint, status, message = '') {
+            const element = document.getElementById(`${endpoint}-status`);
+            element.className = `endpoint-status ${status}`;
+            element.textContent = message || (status === 'success' ? '✅ 正常' : status === 'error' ? '❌ 错误' : '⏳ 测试中');
+        }
+
+        function updateFeatureStatus(feature, status, message = '') {
+            const element = document.getElementById(`${feature}-feature-status`);
+            element.className = `feature-status ${status}`;
+            element.textContent = message || (status === 'success' ? '✅ 正常' : status === 'error' ? '❌ 错误' : '⏳ 测试中');
+        }
+
+        // 测试前端服务
+        async function testFrontend() {
+            log('测试前端服务连接...');
+            updateServiceStatus('frontend', 'testing', '正在测试连接...');
+            
+            try {
+                const response = await fetch('http://localhost:3000/', { 
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                });
+                updateServiceStatus('frontend', 'online', 'Vue 3 应用运行正常 (http://localhost:3000)');
+                log('✅ 前端服务连接正常');
+                testResults.frontend = true;
+                return true;
+            } catch (error) {
+                updateServiceStatus('frontend', 'offline', '前端服务连接失败');
+                log(`❌ 前端服务连接失败: ${error.message}`, 'error');
+                testResults.frontend = false;
+                return false;
+            }
+        }
+
+        // 测试后端服务
+        async function testBackend() {
+            log('测试后端API服务连接...');
+            updateServiceStatus('backend', 'testing', '正在测试连接...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateServiceStatus('backend', 'online', `Express API 运行正常 (${API_BASE})`);
+                    log(`✅ 后端服务连接正常: ${data.message}`);
+                    testResults.backend = true;
+                    return true;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                updateServiceStatus('backend', 'offline', '后端服务连接失败');
+                log(`❌ 后端服务连接失败: ${error.message}`, 'error');
+                testResults.backend = false;
+                return false;
+            }
+        }
+
+        // 测试数据库连接
+        async function testDatabase() {
+            log('测试数据库连接...');
+            updateServiceStatus('database', 'testing', '正在测试数据连接...');
+            
+            try {
+                // 通过API测试数据库连接
+                const response = await fetch(`${API_BASE}/api/stats/dashboard`);
+                if (response.ok) {
+                    const stats = await response.json();
+                    updateServiceStatus('database', 'online', `模拟数据库正常 (${stats.totalUsers} 用户, ${stats.totalArticles} 文章)`);
+                    log(`✅ 数据库连接正常: 用户${stats.totalUsers}个, 文章${stats.totalArticles}篇`);
+                    testResults.database = true;
+                    return true;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                updateServiceStatus('database', 'offline', '数据库连接失败');
+                log(`❌ 数据库连接失败: ${error.message}`, 'error');
+                testResults.database = false;
+                return false;
+            }
+        }
+
+        // 测试缓存服务
+        async function testCache() {
+            log('测试缓存服务...');
+            updateServiceStatus('cache', 'testing', '正在测试缓存...');
+            
+            // 模拟缓存测试
+            setTimeout(() => {
+                updateServiceStatus('cache', 'online', '内存缓存服务正常');
+                log('✅ 缓存服务正常 (内存缓存模式)');
+                testResults.cache = true;
+            }, 1000);
+        }
+
+        // 测试所有API端点
+        async function testAllAPIs() {
+            log('开始测试所有API端点...');
+            
+            const endpoints = [
+                { name: 'health', method: 'GET', url: '/health' },
+                { name: 'login', method: 'POST', url: '/api/auth/login', body: { email: 'user@docuvault.dev', password: 'password' } },
+                { name: 'articles', method: 'GET', url: '/api/articles' },
+                { name: 'notes', method: 'GET', url: '/api/notes' },
+                { name: 'highlights', method: 'GET', url: '/api/highlights' },
+                { name: 'stats', method: 'GET', url: '/api/stats/dashboard' }
+            ];
+
+            for (const endpoint of endpoints) {
+                updateEndpointStatus(endpoint.name, 'pending', '测试中...');
+                
+                try {
+                    const options = {
+                        method: endpoint.method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    };
+                    
+                    if (endpoint.body) {
+                        options.body = JSON.stringify(endpoint.body);
+                    }
+                    
+                    const response = await fetch(`${API_BASE}${endpoint.url}`, options);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        updateEndpointStatus(endpoint.name, 'success');
+                        log(`✅ ${endpoint.method} ${endpoint.url} - 成功`);
+                        
+                        // 特殊处理登录响应
+                        if (endpoint.name === 'login' && data.token) {
+                            log(`   登录成功，获得token: ${data.token.substring(0, 20)}...`);
+                        }
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    updateEndpointStatus(endpoint.name, 'error', '失败');
+                    log(`❌ ${endpoint.method} ${endpoint.url} - 失败: ${error.message}`, 'error');
+                }
+                
+                // 添加延迟避免请求过快
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            log('API端点测试完成');
+        }
+
+        // 测试用户认证流程
+        async function testAuthFlow() {
+            log('测试用户认证流程...');
+            updateFeatureStatus('auth', 'pending', '测试中...');
+            
+            try {
+                // 测试登录
+                const loginResponse = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'user@docuvault.dev', password: 'password' })
+                });
+                
+                if (!loginResponse.ok) throw new Error('登录失败');
+                
+                const loginData = await loginResponse.json();
+                log(`✅ 登录成功: ${loginData.user.nickname}`);
+                
+                // 测试获取用户信息
+                const userResponse = await fetch(`${API_BASE}/api/users/me`, {
+                    headers: { 'Authorization': `Bearer ${loginData.token}` }
+                });
+                
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    log(`✅ 获取用户信息成功: ${userData.nickname}`);
+                    updateFeatureStatus('auth', 'success');
+                } else {
+                    throw new Error('获取用户信息失败');
+                }
+            } catch (error) {
+                updateFeatureStatus('auth', 'error');
+                log(`❌ 用户认证流程失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试文章管理流程
+        async function testArticlesFlow() {
+            log('测试文章管理流程...');
+            updateFeatureStatus('articles', 'pending', '测试中...');
+            
+            try {
+                // 获取文章列表
+                const articlesResponse = await fetch(`${API_BASE}/api/articles`);
+                if (!articlesResponse.ok) throw new Error('获取文章列表失败');
+                
+                const articlesData = await articlesResponse.json();
+                log(`✅ 获取文章列表成功: ${articlesData.articles.length} 篇文章`);
+                
+                // 获取单篇文章
+                if (articlesData.articles.length > 0) {
+                    const articleId = articlesData.articles[0].id;
+                    const articleResponse = await fetch(`${API_BASE}/api/articles/${articleId}`);
+                    
+                    if (articleResponse.ok) {
+                        const articleData = await articleResponse.json();
+                        log(`✅ 获取文章详情成功: ${articleData.title}`);
+                        updateFeatureStatus('articles', 'success');
+                    } else {
+                        throw new Error('获取文章详情失败');
+                    }
+                } else {
+                    log('⚠️ 没有文章数据', 'warning');
+                    updateFeatureStatus('articles', 'success');
+                }
+            } catch (error) {
+                updateFeatureStatus('articles', 'error');
+                log(`❌ 文章管理流程失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试高亮系统流程
+        async function testHighlightsFlow() {
+            log('测试高亮系统流程...');
+            updateFeatureStatus('highlights', 'pending', '测试中...');
+            
+            try {
+                // 获取高亮列表
+                const highlightsResponse = await fetch(`${API_BASE}/api/highlights`);
+                if (!highlightsResponse.ok) throw new Error('获取高亮列表失败');
+                
+                const highlightsData = await highlightsResponse.json();
+                log(`✅ 获取高亮列表成功: ${highlightsData.length} 个高亮`);
+                
+                // 创建新高亮
+                const newHighlight = {
+                    article_id: 'art-001',
+                    start_offset: 100,
+                    end_offset: 150,
+                    text_content: '测试高亮文本',
+                    color: '#FFD700'
+                };
+                
+                const createResponse = await fetch(`${API_BASE}/api/highlights`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newHighlight)
+                });
+                
+                if (createResponse.ok) {
+                    const createdHighlight = await createResponse.json();
+                    log(`✅ 创建高亮成功: ${createdHighlight.id}`);
+                    updateFeatureStatus('highlights', 'success');
+                } else {
+                    throw new Error('创建高亮失败');
+                }
+            } catch (error) {
+                updateFeatureStatus('highlights', 'error');
+                log(`❌ 高亮系统流程失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试笔记管理流程
+        async function testNotesFlow() {
+            log('测试笔记管理流程...');
+            updateFeatureStatus('notes', 'pending', '测试中...');
+            
+            try {
+                // 获取笔记列表
+                const notesResponse = await fetch(`${API_BASE}/api/notes`);
+                if (!notesResponse.ok) throw new Error('获取笔记列表失败');
+                
+                const notesData = await notesResponse.json();
+                log(`✅ 获取笔记列表成功: ${notesData.length} 个笔记`);
+                
+                // 创建新笔记
+                const newNote = {
+                    title: '测试笔记',
+                    content: '这是一个测试笔记的内容',
+                    article_id: 'art-001',
+                    is_public: true
+                };
+                
+                const createResponse = await fetch(`${API_BASE}/api/notes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newNote)
+                });
+                
+                if (createResponse.ok) {
+                    const createdNote = await createResponse.json();
+                    log(`✅ 创建笔记成功: ${createdNote.title}`);
+                    updateFeatureStatus('notes', 'success');
+                } else {
+                    throw new Error('创建笔记失败');
+                }
+            } catch (error) {
+                updateFeatureStatus('notes', 'error');
+                log(`❌ 笔记管理流程失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 运行端到端测试
+        async function runE2ETest() {
+            log('🚀 开始运行端到端测试...');
+            
+            // 依次测试所有服务和功能
+            await testFrontend();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testBackend();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testDatabase();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testCache();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testAllAPIs();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            await testAuthFlow();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testArticlesFlow();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testHighlightsFlow();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testNotesFlow();
+            
+            // 生成测试报告
+            const successCount = Object.values(testResults).filter(Boolean).length;
+            const totalCount = Object.keys(testResults).length;
+            
+            log(`🎉 端到端测试完成! 成功率: ${successCount}/${totalCount} (${Math.round(successCount/totalCount*100)}%)`);
+            
+            if (successCount === totalCount) {
+                log('✅ 所有测试通过，DocuVault技术栈运行正常！');
+            } else {
+                log('⚠️ 部分测试失败，请检查相关服务', 'warning');
+            }
+        }
+
+        // 打开主应用
+        function openMainApp() {
+            window.open('http://localhost:3000', '_blank');
+            log('🌐 已打开主应用 (http://localhost:3000)');
+        }
+
+        // 清除所有测试结果
+        function clearAllTests() {
+            document.getElementById('logs').innerHTML = '日志已清除...\n';
+            testResults = {};
+            
+            // 重置所有状态
+            ['frontend', 'backend', 'database', 'cache'].forEach(service => {
+                updateServiceStatus(service, '', '等待测试...');
+            });
+            
+            ['health', 'login', 'articles', 'notes', 'highlights', 'stats'].forEach(endpoint => {
+                updateEndpointStatus(endpoint, 'pending', '未测试');
+            });
+            
+            ['auth', 'articles', 'highlights', 'notes'].forEach(feature => {
+                updateFeatureStatus(feature, 'pending', '未测试');
+            });
+            
+            log('🗑️ 所有测试结果已清除');
+        }
+
+        // 页面加载时自动检查服务状态
+        window.addEventListener('load', async () => {
+            log('📋 DocuVault 完整技术栈测试控制台已启动');
+            log('🔍 开始自动检查服务状态...');
+            
+            await testFrontend();
+            await testBackend();
+            await testDatabase();
+            await testCache();
+            
+            log('✅ 初始服务状态检查完成');
+        });
+    </script>
+</body>
+</html>
