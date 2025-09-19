@@ -1,0 +1,224 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String?
+  nickname      String
+  avatarUrl     String?
+  role          UserRole @default(USER)
+  wechatOpenid  String?  @unique
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 关系
+  articles      Article[]
+  notes         Note[]
+  highlights    Highlight[]
+  orders        Order[]
+  likes         Like[]
+  collections   Collection[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 关系
+  articles    Article[]
+
+  @@map("categories")
+}
+
+model Article {
+  id              String        @id @default(cuid())
+  title           String
+  content         String
+  excerpt         String?
+  coverImageUrl   String?
+  authorId        String
+  categoryId      String?
+  isPaid          Boolean       @default(false)
+  price           Decimal?      @db.Decimal(10, 2)
+  status          ArticleStatus @default(DRAFT)
+  viewCount       Int           @default(0)
+  likeCount       Int           @default(0)
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // 关系
+  author          User          @relation(fields: [authorId], references: [id])
+  category        Category?     @relation(fields: [categoryId], references: [id])
+  notes           Note[]
+  highlights      Highlight[]
+  orders          Order[]
+  likes           Like[]
+  collectionItems CollectionItem[]
+
+  // 索引
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([status, publishedAt])
+  @@index([isPaid])
+  @@map("articles")
+}
+
+model Collection {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  coverImageUrl String?
+  price       Decimal           @db.Decimal(10, 2)
+  authorId    String
+  status      CollectionStatus  @default(DRAFT)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // 关系
+  author      User              @relation(fields: [authorId], references: [id])
+  items       CollectionItem[]
+  orders      Order[]
+
+  @@index([authorId])
+  @@index([status])
+  @@map("collections")
+}
+
+model CollectionItem {
+  id           String     @id @default(cuid())
+  collectionId String
+  articleId    String
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  // 关系
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  article      Article    @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, articleId])
+  @@index([collectionId, sortOrder])
+  @@map("collection_items")
+}
+
+model Note {
+  id            String   @id @default(cuid())
+  userId        String
+  articleId     String
+  highlightText String?
+  noteText      String?
+  positionData  Json     // 虚拟DOM位置信息
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 关系
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([userId, articleId])
+  @@index([createdAt])
+  @@map("notes")
+}
+
+model Highlight {
+  id           String   @id @default(cuid())
+  userId       String
+  articleId    String
+  startOffset  Int
+  endOffset    Int
+  color        String   @default("yellow")
+  virtualNodeId String  // 虚拟DOM节点ID
+  createdAt    DateTime @default(now())
+
+  // 关系
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article      Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([userId, articleId])
+  @@index([virtualNodeId])
+  @@map("highlights")
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  articleId     String?
+  collectionId  String?
+  amount        Decimal     @db.Decimal(10, 2)
+  status        OrderStatus @default(PENDING)
+  paymentMethod String?
+  paymentId     String?
+  paidAt        DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // 关系
+  user          User        @relation(fields: [userId], references: [id])
+  article       Article?    @relation(fields: [articleId], references: [id])
+  collection    Collection? @relation(fields: [collectionId], references: [id])
+
+  // 约束：防重复购买
+  @@unique([userId, articleId])
+  @@unique([userId, collectionId])
+  @@index([userId])
+  @@index([status])
+  @@map("orders")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+
+  // 关系
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([articleId])
+  @@map("likes")
+}
+
+// 枚举类型
+enum UserRole {
+  USER
+  ADMIN
+  CONTENT_MANAGER
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CollectionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}

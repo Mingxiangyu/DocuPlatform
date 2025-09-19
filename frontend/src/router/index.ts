@@ -15,7 +15,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('../pages/LoginPage.vue'),
+    component: () => import('../pages/DSLoginPage.vue'),
     meta: {
       title: '登录 - DocuVault',
       requiresGuest: true

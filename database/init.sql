@@ -12,16 +12,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE EXTENSION IF NOT EXISTS "unaccent";
 
--- 创建全文搜索配置（中文支持）
+-- 创建全文搜索配置（简化版，不使用中文停用词）
 CREATE TEXT SEARCH CONFIGURATION chinese (COPY = simple);
-CREATE TEXT SEARCH DICTIONARY chinese_stem (
-    TEMPLATE = simple,
-    STOPWORDS = chinese
-);
-ALTER TEXT SEARCH CONFIGURATION chinese
-    ALTER MAPPING FOR asciiword, asciihword, hword_asciipart,
-                      word, hword, hword_part
-    WITH chinese_stem;
 
 -- 创建索引函数（用于全文搜索）
 CREATE OR REPLACE FUNCTION articles_search_vector_update() RETURNS trigger AS $$

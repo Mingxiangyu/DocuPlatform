@@ -336,10 +336,11 @@ const containerStyles = computed(() => ({
   margin: '0 auto',
   padding: `0 ${getSpacing(6)}`,
   display: 'grid',
-  gridTemplateColumns: props.showMedia ? '1fr 1fr' : '1fr',
+  gridTemplateColumns: props.showMedia ? '1.2fr 0.8fr' : '1fr',
   gap: getSpacing(12),
   alignItems: 'center',
-  height: '100%'
+  height: '100%',
+  minHeight: '500px'
 }))
 
 // 内容样式
@@ -392,8 +393,9 @@ const descriptionStyles = computed(() => ({
 // 操作按钮样式
 const actionsStyles = computed(() => ({
   display: 'flex',
-  gap: getSpacing(4),
-  flexWrap: 'wrap'
+  flexDirection: 'column',
+  gap: getSpacing(6),
+  width: '100%'
 }))
 
 // 特性列表样式
@@ -452,7 +454,9 @@ const mediaStyles = computed(() => ({
   position: 'relative',
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center'
+  justifyContent: 'center',
+  maxHeight: '500px',
+  overflow: 'hidden'
 }))
 
 const imageContainerStyles = computed(() => ({

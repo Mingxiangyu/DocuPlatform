@@ -43,7 +43,7 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-2 text-sm text-gray-500">
           <span class="flex items-center">
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <svg style="width: 16px; height: 16px; margin-right: 0.25rem;" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
               <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
             </svg>
@@ -51,7 +51,7 @@
           </span>
           
           <span class="flex items-center">
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <svg style="width: 16px; height: 16px; margin-right: 0.25rem;" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
             </svg>
             {{ article.likeCount }}
@@ -63,7 +63,7 @@
             v-if="article.author.avatarUrl"
             :src="article.author.avatarUrl"
             :alt="article.author.nickname"
-            class="w-6 h-6 rounded-full mr-2"
+            style="width: 24px; height: 24px; border-radius: 50%; margin-right: 0.5rem;"
           />
           <span class="text-sm text-gray-600">{{ article.author.nickname }}</span>
         </div>
@@ -94,7 +94,7 @@
           size="sm"
           @click="$emit('like', article.id)"
         >
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
           </svg>
         </Button>

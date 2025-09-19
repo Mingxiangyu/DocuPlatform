@@ -5,64 +5,27 @@
 
 <template>
   <div class="login-page" :style="pageStyles">
-    <!-- 背景装饰 -->
-    <div class="background-decorations" :style="backgroundDecorationsStyles">
-      <div class="decoration-blob blob-1" :style="getBlobStyles(1)"></div>
-      <div class="decoration-blob blob-2" :style="getBlobStyles(2)"></div>
-      <div class="decoration-blob blob-3" :style="getBlobStyles(3)"></div>
-      <div class="decoration-pattern" :style="decorationPatternStyles"></div>
-    </div>
+    <!-- 顶部导航栏 -->
+    <nav class="top-navigation" :style="topNavigationStyles">
+      <div class="nav-container" :style="navContainerStyles">
+        <div class="nav-brand" :style="navBrandStyles">
+          <div class="brand-icon" :style="brandIconStyles">
+            <svg width="32" height="32" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>
+            </svg>
+          </div>
+          <span class="brand-text" :style="brandTextStyles">DocuVault</span>
+        </div>
+        <div class="nav-links" :style="navLinksStyles">
+          <router-link to="/" class="nav-link" :style="navLinkStyles">返回首页</router-link>
+          <router-link to="/qr-login" class="nav-link" :style="navLinkStyles">扫码登录</router-link>
+        </div>
+      </div>
+    </nav>
 
     <!-- 主要内容容器 -->
     <div class="main-container" :style="mainContainerStyles">
-      <!-- 左侧品牌区域 -->
-      <div class="brand-section" :style="brandSectionStyles">
-        <div class="brand-content" :style="brandContentStyles">
-          <!-- 品牌Logo -->
-          <div class="brand-logo" :style="brandLogoStyles">
-            <div class="logo-icon" :style="logoIconStyles">
-              <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <span class="logo-text" :style="logoTextStyles">DocuVault</span>
-          </div>
-
-          <!-- 品牌标语 -->
-          <div class="brand-tagline" :style="brandTaglineStyles">
-            <h1 class="tagline-title" :style="taglineTitleStyles">
-              知识的宝库
-            </h1>
-            <p class="tagline-subtitle" :style="taglineSubtitleStyles">
-              发现、学习、分享优质内容，与全球知识创作者一起成长
-            </p>
-          </div>
-
-          <!-- 特性列表 -->
-          <div class="features-list" :style="featuresListStyles">
-            <div
-              v-for="feature in features"
-              :key="feature.id"
-              class="feature-item"
-              :style="featureItemStyles"
-            >
-              <div class="feature-icon" :style="featureIconStyles">
-                <component :is="feature.icon" />
-              </div>
-              <div class="feature-content" :style="featureContentStyles">
-                <h3 class="feature-title" :style="featureTitleStyles">
-                  {{ feature.title }}
-                </h3>
-                <p class="feature-description" :style="featureDescriptionStyles">
-                  {{ feature.description }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 右侧登录表单区域 -->
+      <!-- 登录表单区域 -->
       <div class="form-section" :style="formSectionStyles">
         <div class="form-container" :style="formContainerStyles">
           <!-- 表单头部 -->
@@ -259,7 +222,7 @@
 import { computed, ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useDesignTokens } from '../design-system/composables'
-import { eventBus, showNotification } from '../utils/EventBus'
+import { eventBus } from '../utils/EventBus'
 
 // 表单数据接口
 interface LoginFormData {
@@ -356,169 +319,90 @@ const isFormValid = computed(() => {
 // 样式计算
 const pageStyles = computed(() => ({
   minHeight: '100vh',
-  backgroundColor: getColor('gray.50'),
-  position: 'relative',
-  overflow: 'hidden'
+  backgroundColor: '#f8f9fa',
+  display: 'flex',
+  flexDirection: 'column',
+  fontFamily: tokens.typography.fontFamily.sans.join(', ')
 }))
 
-const backgroundDecorationsStyles = computed(() => ({
-  position: 'absolute',
+
+
+// 导航栏样式
+const topNavigationStyles = computed(() => ({
+  backgroundColor: 'white',
+  borderBottom: `1px solid ${getColor('gray.200')}`,
+  height: '80px',
+  display: 'flex',
+  alignItems: 'center',
+  position: 'sticky',
   top: '0',
-  left: '0',
-  right: '0',
-  bottom: '0',
-  zIndex: '1'
+  zIndex: '1000'
 }))
 
-const getBlobStyles = (index: number) => {
-  const positions = [
-    { top: '-10%', right: '-10%', color: getColor('primary.200') },
-    { bottom: '-10%', left: '-10%', color: getColor('blue.200') },
-    { top: '20%', left: '10%', color: getColor('purple.200') }
-  ]
-  
-  const position = positions[index - 1]
-  
-  return {
-    position: 'absolute',
-    width: '400px',
-    height: '400px',
-    backgroundColor: position.color,
-    borderRadius: '50%',
-    filter: 'blur(60px)',
-    opacity: '0.3',
-    animation: `blob 7s infinite ${index * 2}s`,
-    ...position
-  }
-}
+const navContainerStyles = computed(() => ({
+  maxWidth: '1200px',
+  margin: '0 auto',
+  padding: `0 ${getSpacing(6)}`,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  width: '100%'
+}))
 
-const decorationPatternStyles = computed(() => ({
-  position: 'absolute',
-  top: '0',
-  left: '0',
-  right: '0',
-  bottom: '0',
-  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23${getColor('primary.300').replace('#', '')}' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-  opacity: '0.5'
+const navBrandStyles = computed(() => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: getSpacing(3)
+}))
+
+const brandIconStyles = computed(() => ({
+  width: '32px',
+  height: '32px',
+  color: getColor('primary.600')
+}))
+
+const brandTextStyles = computed(() => ({
+  fontSize: tokens.typography.fontSize.xl[0],
+  fontWeight: tokens.typography.fontWeight.bold,
+  color: getColor('gray.900')
+}))
+
+const navLinksStyles = computed(() => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: getSpacing(6)
+}))
+
+const navLinkStyles = computed(() => ({
+  fontSize: tokens.typography.fontSize.sm[0],
+  color: getColor('gray.600'),
+  textDecoration: 'none',
+  fontWeight: tokens.typography.fontWeight.medium,
+  transition: 'color 0.2s ease'
 }))
 
 const mainContainerStyles = computed(() => ({
   position: 'relative',
   zIndex: '2',
-  minHeight: '100vh',
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  maxWidth: '1400px',
+  minHeight: 'calc(100vh - 80px)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: getSpacing(8),
+  maxWidth: '1200px',
   margin: '0 auto'
 }))
 
-// 品牌区域样式
-const brandSectionStyles = computed(() => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: getSpacing(12),
-  background: `linear-gradient(135deg, ${getColor('primary.600')} 0%, ${getColor('primary.800')} 100%)`,
-  color: 'white'
-}))
 
-const brandContentStyles = computed(() => ({
-  maxWidth: '480px',
-  width: '100%'
-}))
-
-const brandLogoStyles = computed(() => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: getSpacing(3),
-  marginBottom: getSpacing(8)
-}))
-
-const logoIconStyles = computed(() => ({
-  width: '48px',
-  height: '48px',
-  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  borderRadius: tokens.borderRadius.xl,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  backdropFilter: 'blur(8px)'
-}))
-
-const logoTextStyles = computed(() => ({
-  fontSize: tokens.typography.fontSize['2xl'][0],
-  fontWeight: tokens.typography.fontWeight.bold,
-  fontFamily: tokens.typography.fontFamily.serif.join(', ')
-}))
-
-const brandTaglineStyles = computed(() => ({
-  marginBottom: getSpacing(10)
-}))
-
-const taglineTitleStyles = computed(() => ({
-  fontSize: tokens.typography.fontSize['4xl'][0],
-  fontWeight: tokens.typography.fontWeight.bold,
-  lineHeight: tokens.typography.lineHeight.tight,
-  marginBottom: getSpacing(4),
-  margin: '0 0 1rem 0'
-}))
-
-const taglineSubtitleStyles = computed(() => ({
-  fontSize: tokens.typography.fontSize.lg[0],
-  lineHeight: tokens.typography.lineHeight.relaxed,
-  opacity: '0.9',
-  margin: '0'
-}))
-
-const featuresListStyles = computed(() => ({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: getSpacing(6)
-}))
-
-const featureItemStyles = computed(() => ({
-  display: 'flex',
-  alignItems: 'flex-start',
-  gap: getSpacing(4)
-}))
-
-const featureIconStyles = computed(() => ({
-  width: '48px',
-  height: '48px',
-  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  borderRadius: tokens.borderRadius.lg,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: '0',
-  backdropFilter: 'blur(8px)'
-}))
-
-const featureContentStyles = computed(() => ({
-  flex: '1'
-}))
-
-const featureTitleStyles = computed(() => ({
-  fontSize: tokens.typography.fontSize.lg[0],
-  fontWeight: tokens.typography.fontWeight.semibold,
-  marginBottom: getSpacing(1),
-  margin: '0 0 0.25rem 0'
-}))
-
-const featureDescriptionStyles = computed(() => ({
-  fontSize: tokens.typography.fontSize.base[0],
-  opacity: '0.8',
-  lineHeight: tokens.typography.lineHeight.relaxed,
-  margin: '0'
-}))
 
 // 表单区域样式
 const formSectionStyles = computed(() => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: getSpacing(12),
-  backgroundColor: 'white'
+  width: '100%',
+  maxWidth: '400px',
+  backgroundColor: 'white',
+  borderRadius: tokens.borderRadius.xl,
+  padding: getSpacing(8),
+  boxShadow: getShadow('large')
 }))
 
 const formContainerStyles = computed(() => ({
@@ -793,7 +677,7 @@ const handleSubmit = async () => {
     await new Promise(resolve => setTimeout(resolve, 2000))
     
     // 模拟登录成功
-    showNotification('success', '登录成功！')
+    eventBus.emit('notification:show', { type: 'success', message: '登录成功！' })
     
     // 重定向到目标页面
     const redirect = route.query.redirect as string || '/'
@@ -808,7 +692,7 @@ const handleSubmit = async () => {
 }
 
 const handleSocialLogin = (provider: string) => {
-  showNotification('info', `${provider} 登录功能开发中`)
+  eventBus.emit('notification:show', { type: 'info', message: `${provider} 登录功能开发中` })
 }
 </script>
 
@@ -869,6 +753,10 @@ const handleSocialLogin = (provider: string) => {
   color: var(--color-primary-700);
 }
 
+.nav-link:hover {
+  color: var(--color-primary-600);
+}
+
 .divider::before {
   content: '';
   position: absolute;
@@ -880,35 +768,41 @@ const handleSocialLogin = (provider: string) => {
 }
 
 /* 响应式调整 */
-@media (max-width: 1024px) {
-  .main-container {
-    grid-template-columns: 1fr;
+@media (max-width: 768px) {
+  .top-navigation {
+    height: 60px;
   }
-  
-  .brand-section {
+
+  .nav-container {
+    padding: 0 1rem;
+  }
+
+  .nav-links {
     display: none;
   }
-  
+
+  .main-container {
+    padding: 1rem;
+    min-height: calc(100vh - 60px);
+  }
+
   .form-section {
-    min-height: 100vh;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
   }
 }
 
 @media (max-width: 640px) {
-  .form-section {
-    padding: 1.5rem;
-  }
-  
   .form-container {
     max-width: none;
   }
-  
+
   .form-options {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .social-login {
     gap: 0.75rem;
   }
@@ -916,7 +810,6 @@ const handleSocialLogin = (provider: string) => {
 
 /* 减少动画偏好支持 */
 @media (prefers-reduced-motion: reduce) {
-  .decoration-blob,
   .form-input,
   .submit-button,
   .social-button {
@@ -936,8 +829,7 @@ const handleSocialLogin = (provider: string) => {
 
 /* 打印样式 */
 @media print {
-  .background-decorations,
-  .brand-section,
+  .top-navigation,
   .social-login {
     display: none;
   }

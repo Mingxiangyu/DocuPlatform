@@ -195,7 +195,7 @@ networks:
     name: docuvault-dev-network
     ipam:
       config:
-        - subnet: 172.21.0.0/16
+        - subnet: 172.22.0.0/16
 
 # 数据卷
 volumes:

@@ -91,8 +91,57 @@
 
         <!-- 用户操作区域 -->
         <div class="header-actions" :style="actionsStyles">
-          <!-- 未登录状态 -->
-          <div v-if="!isAuthenticated" class="auth-actions" :style="authActionsStyles">
+          <!-- 收藏图标 -->
+          <button
+            class="action-button"
+            :style="actionButtonStyles"
+            aria-label="收藏"
+            @click="handleFavorites"
+          >
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+            </svg>
+          </button>
+
+          <!-- 书签图标 -->
+          <button
+            class="action-button"
+            :style="actionButtonStyles"
+            aria-label="书签"
+            @click="handleBookmarks"
+          >
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+            </svg>
+          </button>
+
+          <!-- 用户头像 (始终显示) -->
+          <button
+            class="user-avatar-button"
+            :style="userAvatarButtonStyles"
+            :aria-label="isAuthenticated ? `用户菜单 - ${user?.name || '用户'}` : '用户菜单'"
+            @click="isAuthenticated ? toggleUserMenu() : handleLogin()"
+          >
+            <img
+              v-if="isAuthenticated && user?.avatar"
+              :src="user.avatar"
+              :alt="user.name"
+              class="user-avatar"
+              :style="userAvatarStyles"
+            />
+            <div
+              v-else
+              class="user-avatar-placeholder"
+              :style="userAvatarPlaceholderStyles"
+            >
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          </button>
+
+          <!-- 未登录状态 - 隐藏登录注册按钮以匹配原型 -->
+          <div v-if="false" class="auth-actions" :style="authActionsStyles">
             <DSButton
               variant="ghost"
               size="sm"
@@ -191,8 +240,9 @@
             </div>
           </div>
 
-          <!-- 移动端菜单按钮 -->
+          <!-- 移动端菜单按钮 - 隐藏以匹配原型 -->
           <button
+            v-if="false"
             class="mobile-menu-button"
             :style="mobileMenuButtonStyles"
             :aria-label="showMobileMenu ? '关闭菜单' : '打开菜单'"
@@ -359,6 +409,26 @@ const authStore = useAuthStore()
 const { tokens, getColor, getSpacing, getShadow } = useDesignTokens()
 const { progress: scrollProgress } = useScrollProgress()
 
+// 强制滚动进度更新（修复进度条不更新的问题）
+const forceScrollProgress = ref(0)
+
+const updateScrollProgress = () => {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+  const scrollHeight = document.documentElement.scrollHeight
+  const clientHeight = window.innerHeight
+  const maxScroll = scrollHeight - clientHeight
+  forceScrollProgress.value = maxScroll > 0 ? (scrollTop / maxScroll) * 100 : 0
+}
+
+onMounted(() => {
+  updateScrollProgress()
+  window.addEventListener('scroll', updateScrollProgress, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateScrollProgress)
+})
+
 // 组件引用
 const headerRef = ref<HTMLElement | null>(null)
 
@@ -377,8 +447,10 @@ const unreadCount = computed(() => 0) // 从通知store获取
 // 导航项配置
 const navigationItems: NavigationItem[] = [
   { path: '/', label: '首页' },
-  { path: '/articles', label: '文章' },
-  { path: '/collections', label: '合集' }
+  { path: '/categories', label: '分类' },
+  { path: '/articles?sort=popular', label: '热门' },
+  { path: '/articles?sort=latest', label: '最新' },
+  { path: '/about', label: '关于' }
 ]
 
 // 用户菜单项配置
@@ -440,15 +512,17 @@ const scrollProgressContainerStyles = computed(() => ({
   bottom: '0',
   left: '0',
   right: '0',
-  height: '2px',
-  backgroundColor: getColor('gray.100')
+  height: '3px',
+  backgroundColor: getColor('gray.100'),
+  zIndex: '1000'
 }))
 
 const scrollProgressBarStyles = computed(() => ({
   height: '100%',
-  width: `${scrollProgress.value}%`,
-  background: tokens.colors.gradients.progress || `linear-gradient(90deg, ${getColor('primary.600')}, ${getColor('primary.400')})`,
-  transition: 'width 0.3s ease-out'
+  width: `${forceScrollProgress.value}%`,
+  background: `linear-gradient(90deg, rgb(168, 85, 247) 0%, rgb(147, 51, 234) 100%)`,
+  transition: 'width 0.3s ease-out',
+  transformOrigin: 'left center'
 }))
 
 // 容器和内容样式
@@ -503,12 +577,9 @@ const logoBrandStyles = computed(() => ({
 
 // 导航相关样式
 const navStyles = computed(() => ({
-  display: 'none',
+  display: 'flex',
   alignItems: 'center',
-  gap: getSpacing(8),
-  '@media (min-width: 768px)': {
-    display: 'flex'
-  }
+  gap: getSpacing(8)
 }))
 
 const navItemClasses = computed(() => [
@@ -545,13 +616,10 @@ const navIndicatorStyles = computed(() => ({
 
 // 搜索相关样式
 const searchContainerStyles = computed(() => ({
-  display: 'none',
+  display: 'flex',
   flex: '1',
   maxWidth: '512px',
-  margin: `0 ${getSpacing(8)}`,
-  '@media (min-width: 768px)': {
-    display: 'block'
-  }
+  margin: `0 ${getSpacing(8)}`
 }))
 
 const searchInputContainerStyles = computed(() => ({
@@ -587,6 +655,24 @@ const actionsStyles = computed(() => ({
   display: 'flex',
   alignItems: 'center',
   gap: getSpacing(4)
+}))
+
+const actionButtonStyles = computed(() => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '40px',
+  height: '40px',
+  borderRadius: '50%',
+  border: 'none',
+  backgroundColor: 'transparent',
+  color: getColor('gray.600'),
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  ':hover': {
+    backgroundColor: getColor('gray.100'),
+    color: getColor('gray.900')
+  }
 }))
 
 const authActionsStyles = computed(() => ({
@@ -804,6 +890,14 @@ const handleLogin = () => {
 const handleRegister = () => {
   emit('register')
   router.push('/register')
+}
+
+const handleFavorites = () => {
+  router.push('/favorites')
+}
+
+const handleBookmarks = () => {
+  router.push('/bookmarks')
 }
 
 const handleLogout = async () => {

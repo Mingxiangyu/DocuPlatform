@@ -158,9 +158,29 @@ const { tokens, getColor, getSpacing } = useDesignTokens()
 const { progress: scrollProgress, isScrolling } = useScrollProgress()
 const progressRef = ref<HTMLElement | null>(null)
 
+// 强制滚动进度更新（修复进度条不更新的问题）
+const forceProgress = ref(0)
+
+const updateProgress = () => {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+  const scrollHeight = document.documentElement.scrollHeight
+  const clientHeight = window.innerHeight
+  const maxScroll = scrollHeight - clientHeight
+  forceProgress.value = maxScroll > 0 ? (scrollTop / maxScroll) * 100 : 0
+}
+
+onMounted(() => {
+  updateProgress()
+  window.addEventListener('scroll', updateProgress, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateProgress)
+})
+
 // 当前进度
 const progress = computed(() => {
-  return Math.max(0, Math.min(100, scrollProgress.value))
+  return Math.max(0, Math.min(100, forceProgress.value))
 })
 
 // 进度颜色
@@ -242,7 +262,8 @@ const backgroundStyles = computed(() => ({
 // 填充样式
 const fillStyles = computed(() => {
   const isHorizontal = props.position === 'top' || props.position === 'bottom'
-  
+  const progressValue = Math.max(0, Math.min(100, progress.value))
+
   const styles: Record<string, string> = {
     position: 'relative',
     backgroundColor: progressColor.value,
@@ -253,10 +274,12 @@ const fillStyles = computed(() => {
 
   if (isHorizontal) {
     styles.height = '100%'
-    styles.width = `${progress.value}%`
+    styles.width = `${progressValue}%`
+    styles.minWidth = progressValue > 0 ? `${progressValue}%` : '0'
   } else {
     styles.width = '100%'
-    styles.height = `${progress.value}%`
+    styles.height = `${progressValue}%`
+    styles.minHeight = progressValue > 0 ? `${progressValue}%` : '0'
     styles.marginTop = 'auto'
   }
 

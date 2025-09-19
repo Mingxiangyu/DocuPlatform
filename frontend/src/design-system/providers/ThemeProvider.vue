@@ -198,8 +198,7 @@ const setTheme = (theme: 'light' | 'dark' | 'auto') => {
   }))
 }
 
-// 组件工厂实例
-const componentFactory = new DesignSystemComponentFactory(props.tokens)
+
 
 // 注册新组件到组件工厂
 const registerNewComponents = () => {

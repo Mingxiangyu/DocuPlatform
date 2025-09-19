@@ -76,18 +76,18 @@
         v-for="(category, index) in displayCategories"
         :key="category.id"
         :title="category.title"
-        :description="category.description"
+        :description="cardVariant === 'minimal' ? undefined : category.description"
         :category="category.type"
         :article-count="category.articleCount"
-        :author-count="category.authorCount"
-        :tags="category.tags"
+        :author-count="cardVariant === 'minimal' ? undefined : category.authorCount"
+        :tags="cardVariant === 'minimal' ? undefined : category.tags"
         :size="cardSize"
         :variant="cardVariant"
         :animation="cardAnimation"
         :scroll-animation="scrollAnimation && isVisible"
         :loading="false"
         :clickable="!loading"
-        :aria-label="`${category.title}分类，包含${category.articleCount}篇文章`"
+        :aria-label="`${category.title}分类，包含${category.articleCount}篇文档`"
         :style="getCategoryCardStyles(index)"
         role="gridcell"
         :aria-rowindex="Math.floor(index / currentColumns) + 1"
@@ -97,7 +97,7 @@
         @focus="handleCategoryFocus(category, $event)"
       >
         <template #icon>
-          <component :is="category.icon" class="w-6 h-6" />
+          <component :is="category.icon" style="width: 100%; height: 100%;" />
         </template>
       </DSCategoryCard>
     </div>
@@ -294,34 +294,21 @@ const containerStyles = computed(() => ({
 const gridClasses = computed(() => {
   const classes = [
     'category-grid',
-    'grid',
     'w-full',
     'transition-all',
     'duration-500',
     'ease-out'
   ]
 
-  // 响应式列数
-  classes.push(`grid-cols-${responsiveColumns.value.base}`)
-  classes.push(`sm:grid-cols-${responsiveColumns.value.sm}`)
-  classes.push(`md:grid-cols-${responsiveColumns.value.md}`)
-  classes.push(`lg:grid-cols-${responsiveColumns.value.lg}`)
-  classes.push(`xl:grid-cols-${responsiveColumns.value.xl}`)
-
-  // 间距
-  const gapClass = {
-    sm: 'gap-3',
-    md: 'gap-4',
-    lg: 'gap-6'
-  }[props.gap]
-  classes.push(gapClass)
-
   return classes
 })
 
 // 网格样式
 const gridStyles = computed(() => ({
-  gap: gapConfig.value
+  display: 'grid',
+  gridTemplateColumns: `repeat(${responsiveColumns.value.lg}, 1fr)`,
+  gap: gapConfig.value,
+  width: '100%'
 }))
 
 // 分类卡片样式

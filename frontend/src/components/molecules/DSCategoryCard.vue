@@ -45,27 +45,34 @@
         {{ title }}
       </h3>
       
-      <!-- 描述 -->
-      <p v-if="description" class="category-description" :style="descriptionStyles">
+      <!-- 描述 (只在非minimal模式下显示) -->
+      <p v-if="description && variant !== 'minimal'" class="category-description" :style="descriptionStyles">
         {{ description }}
       </p>
-      
+
       <!-- 统计信息 -->
-      <div v-if="showStats" class="category-stats" :style="statsStyles">
-        <div class="stat-item" :style="statItemStyles">
-          <span class="stat-number" :style="statNumberStyles">{{ articleCount }}</span>
-          <span class="stat-label" :style="statLabelStyles">篇文章</span>
+      <div v-if="shouldShowStats" class="category-stats" :style="statsStyles">
+        <!-- minimal模式下只显示文档数量 -->
+        <div v-if="variant === 'minimal'" class="stat-item" :style="statItemStyles">
+          <span class="stat-label" :style="statLabelStyles">{{ articleCount }} 篇文档</span>
         </div>
-        <div v-if="authorCount" class="stat-item" :style="statItemStyles">
-          <span class="stat-number" :style="statNumberStyles">{{ authorCount }}</span>
-          <span class="stat-label" :style="statLabelStyles">位作者</span>
-        </div>
+        <!-- 其他模式显示完整统计 -->
+        <template v-else>
+          <div class="stat-item" :style="statItemStyles">
+            <span class="stat-number" :style="statNumberStyles">{{ articleCount }}</span>
+            <span class="stat-label" :style="statLabelStyles">篇文章</span>
+          </div>
+          <div v-if="authorCount" class="stat-item" :style="statItemStyles">
+            <span class="stat-number" :style="statNumberStyles">{{ authorCount }}</span>
+            <span class="stat-label" :style="statLabelStyles">位作者</span>
+          </div>
+        </template>
       </div>
-      
-      <!-- 标签 -->
-      <div v-if="tags && tags.length > 0" class="category-tags" :style="tagsStyles">
-        <span 
-          v-for="tag in displayTags" 
+
+      <!-- 标签 (只在非minimal模式下显示) -->
+      <div v-if="tags && tags.length > 0 && variant !== 'minimal'" class="category-tags" :style="tagsStyles">
+        <span
+          v-for="tag in displayTags"
           :key="tag"
           class="category-tag"
           :style="tagStyles"
@@ -181,11 +188,29 @@ const categoryConfig = computed(() => {
       border: getColor('success.200'),
       gradient: tokens.colors.gradients.category.backend
     },
+    database: {
+      color: getColor('blue.600'),
+      background: getColor('blue.50'),
+      border: getColor('blue.200'),
+      gradient: tokens.colors.gradients.category.backend
+    },
     mobile: {
       color: getColor('info.600'),
       background: getColor('info.50'),
       border: getColor('info.200'),
       gradient: tokens.colors.gradients.category.mobile
+    },
+    cloud: {
+      color: getColor('indigo.600'),
+      background: getColor('indigo.50'),
+      border: getColor('indigo.200'),
+      gradient: tokens.colors.gradients.category.devops
+    },
+    security: {
+      color: getColor('red.600'),
+      background: getColor('red.50'),
+      border: getColor('red.200'),
+      gradient: tokens.colors.gradients.category.devops
     },
     design: {
       color: getColor('warning.600'),
@@ -206,14 +231,24 @@ const categoryConfig = computed(() => {
       gradient: tokens.colors.gradients.category.ai
     }
   }
-  
-  return configs[props.category]
+
+  return configs[props.category] || configs.frontend
 })
 
 // 显示的标签
-const displayTags = computed(() => 
+const displayTags = computed(() =>
   props.tags?.slice(0, props.maxTags) || []
 )
+
+// 是否显示统计信息
+const shouldShowStats = computed(() => {
+  // minimal模式下总是显示文档数量
+  if (props.variant === 'minimal') {
+    return true
+  }
+  // 其他模式根据showStats属性决定
+  return props.showStats
+})
 
 // 样式计算
 const cardClasses = computed(() => {
@@ -249,7 +284,36 @@ const cardClasses = computed(() => {
 })
 
 const cardStyles = computed(() => {
-  const sizeMap = {
+  // minimal变体使用更紧凑的尺寸，并采用垂直居中布局
+  const sizeMap = props.variant === 'minimal' ? {
+    sm: {
+      padding: getSpacing(4),
+      minHeight: '120px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: 'center'
+    },
+    md: {
+      padding: getSpacing(5),
+      minHeight: '140px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: 'center'
+    },
+    lg: {
+      padding: getSpacing(6),
+      minHeight: '160px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: 'center'
+    }
+  } : {
     sm: {
       padding: getSpacing(4),
       minHeight: '120px'
@@ -266,7 +330,7 @@ const cardStyles = computed(() => {
 
   const styles: Record<string, string> = {
     backgroundColor: 'white',
-    border: `1px solid ${categoryConfig.value.border}`,
+    border: `1px solid ${getColor('gray.200')}`,
     borderRadius: tokens.borderRadius.xl,
     boxShadow: getShadow('soft'),
     ...sizeMap[props.size]
@@ -309,11 +373,18 @@ const patternStyles = computed(() => ({
 const iconContainerStyles = computed(() => ({
   position: 'relative',
   zIndex: '2',
-  marginBottom: getSpacing(4)
+  marginBottom: props.variant === 'minimal' ? getSpacing(3) : getSpacing(4),
+  display: 'flex',
+  justifyContent: 'center'
 }))
 
 const iconStyles = computed(() => {
-  const sizeMap = {
+  // minimal变体使用适中的图标尺寸，符合原型设计
+  const sizeMap = props.variant === 'minimal' ? {
+    sm: '32px',
+    md: '40px',
+    lg: '48px'
+  } : {
     sm: getSpacing(8),
     md: getSpacing(10),
     lg: getSpacing(12)
@@ -322,13 +393,11 @@ const iconStyles = computed(() => {
   return {
     width: sizeMap[props.size],
     height: sizeMap[props.size],
-    backgroundColor: categoryConfig.value.background,
+    backgroundColor: 'transparent',
     color: categoryConfig.value.color,
-    borderRadius: tokens.borderRadius.lg,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    border: `1px solid ${categoryConfig.value.border}`,
     transition: `all ${tokens.animations.duration.normal} ${tokens.animations.easing.smooth}`,
     transform: isHovered.value ? 'scale(1.1)' : 'scale(1)'
   }
@@ -346,7 +415,11 @@ const contentStyles = computed(() => ({
 }))
 
 const titleStyles = computed(() => {
-  const sizeMap = {
+  const sizeMap = props.variant === 'minimal' ? {
+    sm: tokens.typography.fontSize.sm,
+    md: tokens.typography.fontSize.base,
+    lg: tokens.typography.fontSize.lg
+  } : {
     sm: tokens.typography.fontSize.base,
     md: tokens.typography.fontSize.lg,
     lg: tokens.typography.fontSize.xl
@@ -357,8 +430,9 @@ const titleStyles = computed(() => {
     lineHeight: sizeMap[props.size][1],
     fontWeight: tokens.typography.fontWeight.semibold,
     color: getColor('gray.900'),
-    marginBottom: getSpacing(2),
-    margin: '0'
+    marginBottom: props.variant === 'minimal' ? getSpacing(2) : getSpacing(2),
+    margin: '0',
+    textAlign: props.variant === 'minimal' ? 'center' : 'left'
   }
 })
 
@@ -374,13 +448,15 @@ const descriptionStyles = computed(() => ({
 const statsStyles = computed(() => ({
   display: 'flex',
   gap: getSpacing(4),
-  marginBottom: getSpacing(3)
+  marginBottom: props.variant === 'minimal' ? '0' : getSpacing(3),
+  justifyContent: props.variant === 'minimal' ? 'center' : 'flex-start'
 }))
 
 const statItemStyles = computed(() => ({
   display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center'
+  flexDirection: props.variant === 'minimal' ? 'row' : 'column',
+  alignItems: 'center',
+  gap: props.variant === 'minimal' ? getSpacing(1) : '0'
 }))
 
 const statNumberStyles = computed(() => ({
@@ -391,9 +467,10 @@ const statNumberStyles = computed(() => ({
 }))
 
 const statLabelStyles = computed(() => ({
-  fontSize: tokens.typography.fontSize.xs[0],
+  fontSize: props.variant === 'minimal' ? tokens.typography.fontSize.sm[0] : tokens.typography.fontSize.xs[0],
   color: getColor('gray.500'),
-  marginTop: getSpacing(1)
+  marginTop: props.variant === 'minimal' ? '0' : getSpacing(1),
+  textAlign: 'center'
 }))
 
 // 标签样式
