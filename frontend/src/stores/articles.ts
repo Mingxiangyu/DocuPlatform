@@ -4,45 +4,369 @@ import type { Article, CreateArticleRequest, UpdateArticleRequest, PaginationPar
 import { apiClient } from '../services/ApiClient'
 import { eventBus } from '../utils/EventBus'
 
-// 模拟文章数据
+// 检查后端健康状态
+const checkBackendHealth = async (): Promise<boolean> => {
+  try {
+    const response = await fetch('http://localhost:8000/health', {
+      method: 'GET',
+      timeout: 3000
+    } as RequestInit)
+    return response.ok
+  } catch (error) {
+    console.warn('Backend health check failed:', error)
+    return false
+  }
+}
+
+// 模拟文章数据 - 基于后端Prisma Schema构建
 const mockArticles: Article[] = [
   {
     id: '1',
-    title: '深入理解Vue 3 Composition API',
-    content: '这是一篇关于Vue 3 Composition API的详细介绍...',
-    excerpt: 'Vue 3 Composition API为开发者提供了更灵活的组件逻辑组织方式',
-    coverImageUrl: '',
+    title: 'Modern React Hooks 完全指南',
+    content: `# Modern React Hooks 完全指南
+
+## 1. 介绍
+
+React Hooks 是 React 16.8 引入的一项重大特性，它允许我们在不编写类组件的情况下使用状态和其他 React 特性。本指南将深入探讨 React Hooks 的设计原理、核心 API 以及实战应用，帮助你掌握这一现代 React 开发的必备技能。
+
+在 Hooks 出现之前，函数组件无法拥有自己的状态，也不能访问生命周期方法。Hooks 的出现彻底改变了这一局面，使得函数组件可以完成类组件所能做的所有事情，同时带来了更简洁的代码结构和更好的复用性。
+
+## 2. useState 详解
+
+\`useState\` 是最基础也是最常用的 Hook，它让函数组件能够拥有自己的状态。
+
+### 基本用法
+
+\`\`\`javascript
+import React, { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>当前计数: {count}</p>
+      <button onClick={() => setCount(count + 1)}>
+        增加
+      </button>
+    </div>
+  );
+}
+\`\`\`
+
+### 状态更新的异步性
+
+需要注意的是，状态更新是异步的，React 会批量处理状态更新以提高性能。
+
+## 3. useEffect 副作用处理
+
+\`useEffect\` Hook 让我们能够在函数组件中执行副作用操作，相当于类组件中的 \`componentDidMount\`、\`componentDidUpdate\` 和 \`componentWillUnmount\` 的组合。
+
+### 基本语法
+
+\`\`\`javascript
+import React, { useState, useEffect } from 'react';
+
+function Example() {
+  const [count, setCount] = useState(0);
+
+  // 相当于 componentDidMount 和 componentDidUpdate
+  useEffect(() => {
+    document.title = \`点击了 \${count} 次\`;
+  });
+
+  return (
+    <div>
+      <p>你点击了 {count} 次</p>
+      <button onClick={() => setCount(count + 1)}>
+        点击我
+      </button>
+    </div>
+  );
+}
+\`\`\`
+
+## 4. useContext 上下文管理
+
+\`useContext\` Hook 让我们能够更简洁地使用 React Context。
+
+### 创建和使用 Context
+
+\`\`\`javascript
+import React, { useContext, createContext } from 'react';
+
+const ThemeContext = createContext();
+
+function App() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <Toolbar />
+    </ThemeContext.Provider>
+  );
+}
+
+function Toolbar() {
+  return (
+    <div>
+      <ThemedButton />
+    </div>
+  );
+}
+
+function ThemedButton() {
+  const theme = useContext(ThemeContext);
+  return (
+    <button style={{ background: theme === 'dark' ? '#333' : '#fff' }}>
+      我是一个 {theme} 主题的按钮
+    </button>
+  );
+}
+\`\`\`
+
+## 5. useReducer 状态管理
+
+对于复杂的状态逻辑，\`useReducer\` 通常比 \`useState\` 更适用。
+
+### 基本用法
+
+\`\`\`javascript
+import React, { useReducer } from 'react';
+
+const initialState = { count: 0 };
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increment':
+      return { count: state.count + 1 };
+    case 'decrement':
+      return { count: state.count - 1 };
+    default:
+      throw new Error();
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    <>
+      计数: {state.count}
+      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
+      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
+    </>
+  );
+}
+\`\`\`
+
+## 6. 自定义 Hooks 开发
+
+自定义 Hooks 是一个函数，其名称以 "use" 开头，函数内部可以调用其他的 Hook。
+
+### 创建自定义 Hook
+
+\`\`\`javascript
+import { useState, useEffect } from 'react';
+
+function useCounter(initialValue = 0) {
+  const [count, setCount] = useState(initialValue);
+
+  const increment = () => setCount(count + 1);
+  const decrement = () => setCount(count - 1);
+  const reset = () => setCount(initialValue);
+
+  return { count, increment, decrement, reset };
+}
+
+// 使用自定义 Hook
+function CounterComponent() {
+  const { count, increment, decrement, reset } = useCounter(10);
+
+  return (
+    <div>
+      <p>计数: {count}</p>
+      <button onClick={increment}>增加</button>
+      <button onClick={decrement}>减少</button>
+      <button onClick={reset}>重置</button>
+    </div>
+  );
+}
+\`\`\`
+
+## 7. 最佳实践与性能优化
+
+### Hook 使用规则
+
+1. **只在最顶层使用 Hook**：不要在循环、条件或嵌套函数中调用 Hook
+2. **只在 React 函数中调用 Hook**：不要在普通的 JavaScript 函数中调用 Hook
+
+### 性能优化技巧
+
+使用 \`useMemo\` 和 \`useCallback\` 来优化性能：
+
+\`\`\`javascript
+import React, { useMemo, useCallback } from 'react';
+
+function ExpensiveComponent({ items, onItemClick }) {
+  const expensiveValue = useMemo(() => {
+    return items.reduce((sum, item) => sum + item.value, 0);
+  }, [items]);
+
+  const handleClick = useCallback((item) => {
+    onItemClick(item);
+  }, [onItemClick]);
+
+  return (
+    <div>
+      <p>总值: {expensiveValue}</p>
+      {items.map(item => (
+        <button key={item.id} onClick={() => handleClick(item)}>
+          {item.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+\`\`\`
+
+## 8. 总结与展望
+
+React Hooks 为函数组件带来了强大的能力，让我们能够以更简洁、更直观的方式编写 React 应用。通过本指南的学习，你应该已经掌握了：
+
+- useState 的基本用法和状态管理
+- useEffect 的副作用处理机制
+- useContext 的上下文管理
+- useReducer 的复杂状态管理
+- 自定义 Hooks 的开发技巧
+- 性能优化的最佳实践
+
+随着 React 的不断发展，Hooks 生态系统也在不断完善。建议继续关注 React 官方文档和社区最佳实践，持续提升你的 React 开发技能。
+
+如果你有任何问题或建议，欢迎在评论区留言讨论。让我们一起在 React 的世界中不断探索和成长！`,
+    excerpt: '深入探讨 React Hooks 的设计原理、核心 API 以及实战应用，帮助你掌握这一现代 React 开发的必备技能。',
+    coverImageUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop',
     authorId: '1',
-    author: { id: '1', nickname: '技术专家', avatarUrl: '' },
-    categoryId: '1',
-    category: { id: '1', name: '前端开发', slug: 'frontend' },
-    isPaid: false,
-    price: 0,
-    status: 'PUBLISHED',
-    viewCount: 1250,
-    likeCount: 89,
-    publishedAt: '2024-12-01T10:00:00Z',
-    createdAt: '2024-12-01T10:00:00Z',
-    updatedAt: '2024-12-01T10:00:00Z'
-  },
-  {
-    id: '2',
-    title: 'TypeScript高级类型系统详解',
-    content: '本文将深入探讨TypeScript的高级类型系统...',
-    excerpt: '掌握TypeScript高级类型，让你的代码更加类型安全',
-    coverImageUrl: '',
-    authorId: '2',
-    author: { id: '2', nickname: 'TS大师', avatarUrl: '' },
+    author: {
+      id: '1',
+      nickname: '张三',
+      avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face'
+    },
     categoryId: '1',
     category: { id: '1', name: '前端开发', slug: 'frontend' },
     isPaid: true,
-    price: 29.9,
+    price: 19.99,
     status: 'PUBLISHED',
-    viewCount: 890,
-    likeCount: 67,
-    publishedAt: '2024-12-02T14:30:00Z',
-    createdAt: '2024-12-02T14:30:00Z',
-    updatedAt: '2024-12-02T14:30:00Z'
+    viewCount: 1200,
+    likeCount: 89,
+    publishedAt: '2024-08-15T10:00:00Z',
+    createdAt: '2024-08-15T10:00:00Z',
+    updatedAt: '2024-08-15T10:00:00Z'
+  },
+  {
+    id: '2',
+    title: 'Python 数据分析实战：从入门到精通',
+    content: `# Python 数据分析实战：从入门到精通
+
+## 引言
+
+Python 已经成为数据科学领域最受欢迎的编程语言之一。本文将带你从零开始，逐步掌握使用 Python 进行数据分析的核心技能。
+
+## 环境准备
+
+首先，我们需要安装必要的库：
+
+\`\`\`bash
+pip install pandas numpy matplotlib seaborn jupyter
+\`\`\`
+
+## 数据加载与探索
+
+使用 Pandas 加载数据是数据分析的第一步：
+
+\`\`\`python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 加载数据
+df = pd.read_csv('data.csv')
+
+# 查看数据基本信息
+print(df.head())
+print(df.info())
+print(df.describe())
+\`\`\`
+
+## 数据清洗
+
+数据清洗是数据分析中最重要的步骤之一：
+
+\`\`\`python
+# 处理缺失值
+df.dropna()  # 删除缺失值
+df.fillna(df.mean())  # 用均值填充
+
+# 处理重复值
+df.drop_duplicates()
+
+# 数据类型转换
+df['date'] = pd.to_datetime(df['date'])
+\`\`\`
+
+## 数据可视化
+
+使用 Matplotlib 和 Seaborn 创建图表：
+
+\`\`\`python
+# 创建基本图表
+plt.figure(figsize=(10, 6))
+plt.plot(df['x'], df['y'])
+plt.title('数据趋势图')
+plt.xlabel('X轴')
+plt.ylabel('Y轴')
+plt.show()
+
+# 使用 Seaborn 创建更美观的图表
+sns.scatterplot(data=df, x='feature1', y='feature2', hue='category')
+plt.show()
+\`\`\`
+
+## 统计分析
+
+进行基本的统计分析：
+
+\`\`\`python
+# 相关性分析
+correlation_matrix = df.corr()
+sns.heatmap(correlation_matrix, annot=True)
+
+# 分组统计
+grouped_data = df.groupby('category').agg({
+    'value': ['mean', 'std', 'count']
+})
+\`\`\`
+
+## 总结
+
+通过本文的学习，你已经掌握了 Python 数据分析的基础技能。继续实践和探索，你将能够处理更复杂的数据分析任务。`,
+    excerpt: '使用 Pandas、NumPy 和 Matplotlib 进行数据分析的完整指南，包含实际案例和最佳实践。',
+    coverImageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop',
+    authorId: '2',
+    author: {
+      id: '2',
+      nickname: '李四',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face'
+    },
+    categoryId: '2',
+    category: { id: '2', name: '数据科学', slug: 'data-science' },
+    isPaid: true,
+    price: 29.99,
+    status: 'PUBLISHED',
+    viewCount: 2500,
+    likeCount: 156,
+    publishedAt: '2024-09-03T14:30:00Z',
+    createdAt: '2024-09-03T14:30:00Z',
+    updatedAt: '2024-09-03T14:30:00Z'
   },
   {
     id: '3',
@@ -203,7 +527,8 @@ export const useArticlesStore = defineStore('articles', () => {
 
       // 检查是否为开发模式且后端不可用，使用模拟数据
       const isDev = import.meta.env.DEV
-      const useMockData = isDev // 暂时总是使用模拟数据
+      const backendAvailable = await checkBackendHealth()
+      const useMockData = isDev && !backendAvailable
 
       if (useMockData) {
         // 模拟API调用延迟
@@ -268,7 +593,7 @@ function example() {
         }
       } else {
         // 真实API调用
-        const response = await apiClient.get<Article>(`/articles/${id}`)
+        const response = await apiClient.get<Article>(`/api/articles/${id}`)
 
         if (response.success && response.data) {
           currentArticle.value = response.data
@@ -474,6 +799,64 @@ function example() {
     currentArticle.value = null
   }
 
+  // 增加浏览量
+  const incrementViewCount = async (id: string) => {
+    try {
+      const article = articles.value.find(a => a.id === id)
+      if (article) {
+        article.viewCount = (article.viewCount || 0) + 1
+      }
+      if (currentArticle.value?.id === id) {
+        currentArticle.value.viewCount = (currentArticle.value.viewCount || 0) + 1
+      }
+    } catch (err) {
+      console.error('增加浏览量失败:', err)
+    }
+  }
+
+  // 切换点赞状态
+  const toggleLike = async (id: string) => {
+    try {
+      const article = articles.value.find(a => a.id === id)
+      if (article) {
+        const isCurrentlyLiked = isLiked(id)
+        article.likeCount = isCurrentlyLiked
+          ? (article.likeCount || 0) - 1
+          : (article.likeCount || 0) + 1
+      }
+      if (currentArticle.value?.id === id) {
+        const isCurrentlyLiked = isLiked(id)
+        currentArticle.value.likeCount = isCurrentlyLiked
+          ? (currentArticle.value.likeCount || 0) - 1
+          : (currentArticle.value.likeCount || 0) + 1
+      }
+    } catch (err) {
+      console.error('切换点赞状态失败:', err)
+    }
+  }
+
+  // 切换收藏状态
+  const toggleBookmark = async (id: string) => {
+    try {
+      // 这里可以添加实际的收藏逻辑
+      console.log('切换收藏状态:', id)
+    } catch (err) {
+      console.error('切换收藏状态失败:', err)
+    }
+  }
+
+  // 检查是否已点赞
+  const isLiked = (id: string) => {
+    // 这里应该检查用户的点赞状态，暂时返回false
+    return false
+  }
+
+  // 检查是否已收藏
+  const isBookmarked = (id: string) => {
+    // 这里应该检查用户的收藏状态，暂时返回false
+    return false
+  }
+
   return {
     // 状态
     articles,
@@ -498,6 +881,11 @@ function example() {
     unlikeArticle,
     purchaseArticle,
     clearError,
-    clearCurrentArticle
+    clearCurrentArticle,
+    incrementViewCount,
+    toggleLike,
+    toggleBookmark,
+    isLiked,
+    isBookmarked
   }
 })

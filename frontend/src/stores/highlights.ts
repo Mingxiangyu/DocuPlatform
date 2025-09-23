@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { 
-  HighlightInfo, 
-  VirtualTextNode, 
+import type {
+  HighlightInfo,
+  VirtualTextNode,
   SelectionRange,
-  HighlightRenderConfig,
-  DEFAULT_HIGHLIGHT_CONFIG 
+  HighlightRenderConfig
 } from '../types/virtual-dom'
+import { DEFAULT_HIGHLIGHT_CONFIG } from '../types/virtual-dom'
 import { VirtualDOMManager } from '../utils/VirtualDOMManager'
 import { HighlightManager } from '../utils/HighlightManager'
 import { TextSelector } from '../utils/TextSelector'
@@ -385,15 +385,31 @@ export const useHighlightsStore = defineStore('highlights', () => {
     currentSelection.value = null
     currentArticleId.value = null
     error.value = null
-    
+
     // 清理管理器
     highlightManager.clearHighlights()
     virtualDOMManager.clearCache()
-    
+
     // 清理本地存储
     localStorage.removeItem('docuvault_highlights')
-    
+
     eventBus.emit('highlights:cleared', {})
+  }
+
+  // 为文章初始化高亮系统
+  const initializeForArticle = async (articleId: string) => {
+    try {
+      currentArticleId.value = articleId
+
+      // 加载该文章的高亮数据
+      await loadHighlights(articleId)
+
+      return { success: true }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '初始化高亮系统失败'
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
+    }
   }
 
   // 初始化
@@ -431,6 +447,7 @@ export const useHighlightsStore = defineStore('highlights', () => {
     setUserFilter,
     setSortBy,
     clearAll,
+    initializeForArticle,
     
     // 管理器实例（供外部使用）
     virtualDOMManager,

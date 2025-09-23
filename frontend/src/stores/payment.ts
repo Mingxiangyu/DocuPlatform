@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Order, CreateOrderRequest } from '../types/api'
 import { eventBus } from '../utils/EventBus'
+import { apiClient } from '../services/ApiClient'
 
 // 支付状态类型
 export type PaymentState = 'idle' | 'creating' | 'pending' | 'polling' | 'success' | 'failed' | 'timeout' | 'cancelled'
@@ -91,16 +92,31 @@ export const usePaymentStore = defineStore('payment', () => {
     try {
       const storedOrders = localStorage.getItem('payment_order_history')
       const storedPurchases = localStorage.getItem('payment_purchased_articles')
-      
+
       if (storedOrders) {
         orderHistory.value = JSON.parse(storedOrders)
       }
-      
+
       if (storedPurchases) {
         purchasedArticles.value = JSON.parse(storedPurchases)
       }
     } catch (error) {
       console.error('Failed to load payment data from storage:', error)
+    }
+  }
+
+  // 从后端API加载用户购买记录
+  const loadUserPurchases = async () => {
+    try {
+      const response = await apiClient.get('/api/orders/my-purchases')
+      if (response.data && Array.isArray(response.data)) {
+        const articleIds = response.data.map((order: any) => order.articleId).filter(Boolean)
+        purchasedArticles.value = [...new Set(articleIds)] // 去重
+        saveToStorage()
+      }
+    } catch (error) {
+      console.error('Failed to load user purchases from API:', error)
+      // 如果API失败，继续使用localStorage中的数据
     }
   }
   
@@ -368,6 +384,10 @@ export const usePaymentStore = defineStore('payment', () => {
       return purchasedArticles.value.includes(articleId)
     },
 
+    hasPurchased: (articleId: string): boolean => {
+      return purchasedArticles.value.includes(articleId)
+    },
+
     closeModal: () => {
       isModalVisible.value = false
 
@@ -387,6 +407,9 @@ export const usePaymentStore = defineStore('payment', () => {
     getOrderHistory: () => orderHistory.value,
 
     // 获取购买的文章列表
-    getPurchasedArticles: () => purchasedArticles.value
+    getPurchasedArticles: () => purchasedArticles.value,
+
+    // 加载用户购买记录
+    loadUserPurchases
   }
 })

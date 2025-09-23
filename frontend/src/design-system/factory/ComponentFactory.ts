@@ -10,10 +10,26 @@ import type { CompleteDesignTokens } from '../tokens'
 export class DesignSystemComponentFactory {
   private designTokens: CompleteDesignTokens
   private themeContext: ThemeContext
+  private registeredComponents: Map<string, Component> = new Map()
 
   constructor(tokens: CompleteDesignTokens, theme: ThemeContext) {
     this.designTokens = tokens
     this.themeContext = theme
+  }
+
+  // 注册组件方法
+  registerComponent(name: string, component: Component): void {
+    this.registeredComponents.set(name, component)
+  }
+
+  // 获取已注册的组件
+  getComponent(name: string): Component | undefined {
+    return this.registeredComponents.get(name)
+  }
+
+  // 获取所有已注册的组件
+  getAllComponents(): Map<string, Component> {
+    return new Map(this.registeredComponents)
   }
 
   // 英雄区域工厂方法

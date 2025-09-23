@@ -852,3 +852,186 @@ useScrollTrigger()  // 滚动触发动画
 - 🎯 完成质量保证验证 (步骤55-70)
 - 🎯 达成90%+视觉匹配度
 - 🎯 完成生产部署准备
+
+## 文章详情页面布局修复记录 (2024-12-22 新增)
+
+### 修复背景
+基于高保真原型对比，文章详情页面存在三个关键布局问题，影响用户体验和原型匹配度。
+
+### 布局架构设计
+
+#### 三列Grid布局系统
+```css
+/* 桌面端三列布局 */
+.grid.grid-cols-1.lg\:grid-cols-12.gap-8 {
+  grid-template-columns: 1fr 3fr 0.8fr !important;
+}
+```
+
+**布局比例**：
+- **左侧目录列**：20% (1fr) - 目录导航和粘性定位
+- **中间内容列**：60% (3fr) - 文章主要内容区域
+- **右侧留白列**：16% (0.8fr) - 纯留白，提供视觉平衡
+
+#### 响应式设计规范
+```css
+/* 移动端断点设置 */
+@media (max-width: 767px) {
+  /* 目录优先显示 */
+  .lg\:col-span-3.order-2.lg\:order-1 {
+    order: 1 !important;
+    position: static !important;
+  }
+
+  /* 右侧留白完全隐藏 */
+  .lg\:col-span-2.order-3.lg\:order-3 {
+    display: none !important;
+  }
+}
+```
+
+### 核心技术解决方案
+
+#### 1. 粘性定位实现
+**问题**：左侧目录没有实现粘性定位，滚动时消失
+**解决方案**：
+```css
+/* 强制目录容器使用粘性定位 */
+.sticky.top-28.self-start {
+  position: sticky !important;
+  top: 112px !important;
+}
+```
+
+**技术要点**：
+- 使用`!important`解决CSS优先级冲突
+- 设置`top: 112px`确保与导航栏保持适当距离
+- 媒体查询断点设置为767px，确保桌面端不受影响
+
+#### 2. CSS优先级解决方案
+**问题**：Tailwind CSS样式被其他规则覆盖
+**最佳实践**：
+```css
+/* 精确选择器 + !important 确保样式生效 */
+.sticky.top-28.self-start {
+  position: sticky !important;
+  top: 112px !important;
+}
+
+/* 媒体查询精确控制 */
+@media (max-width: 767px) {
+  .lg\:col-span-1 {
+    position: static !important;
+  }
+}
+```
+
+**经验总结**：
+- 使用精确的CSS选择器避免样式冲突
+- 合理使用`!important`解决第三方样式覆盖
+- 媒体查询断点需要精确设置，避免影响其他设备
+
+#### 3. 响应式布局切换
+**桌面端布局**：
+- 目录列：`order: 1`，`display: block`，粘性定位
+- 内容列：`order: 2`，`display: block`
+- 留白列：`order: 3`，`display: block`
+
+**移动端布局**：
+- 目录列：`order: 1`，`display: block`，静态定位
+- 内容列：`order: 2`，`display: block`
+- 留白列：`display: none`，完全隐藏
+
+### 组件状态管理模式
+
+#### 付费限制提示组件
+**条件渲染逻辑**：
+```vue
+<template>
+  <div v-if="article?.isPaid && !isPurchased" class="payment-restriction">
+    <!-- 付费提示内容 -->
+  </div>
+</template>
+
+<script setup lang="ts">
+const isPurchased = computed(() =>
+  paymentStore.hasPurchased(article.value?.id)
+)
+</script>
+```
+
+**状态管理方式**：
+- 文章状态：`isPaid: true, price: 19.99`
+- 购买状态：`paymentStore.hasPurchased(articleId)`
+- 条件显示：`v-if="article?.isPaid && !isPurchased"`
+
+### 修复成果验证
+
+#### 桌面端验证结果 ✅
+- **粘性定位**：滚动时目录保持在距离顶部112px位置
+- **三列布局**：20% : 60% : 16%比例完美实现
+- **右侧留白**：提供良好的视觉平衡
+
+#### 移动端验证结果 ✅
+- **目录位置**：显示在文章内容上方，便于用户预览
+- **单列布局**：充分利用移动端屏幕空间
+- **右侧留白**：完全隐藏，避免布局异常
+
+#### 付费组件验证结果 ✅
+- **组件位置**：`/html/body/main/div/div[2]/article/div[2]/div`
+- **显示逻辑**：付费文章且未购买时正确显示
+- **视觉样式**：紫色主题，包含价格和购买按钮
+
+### 技术经验总结
+
+#### CSS优先级管理
+1. **问题识别**：使用浏览器开发工具检查计算样式
+2. **选择器精确性**：使用具体的类名组合避免冲突
+3. **!important使用**：仅在必要时使用，解决第三方样式覆盖
+4. **媒体查询断点**：精确设置断点，避免意外影响
+
+#### 响应式设计模式
+1. **移动端优先**：先设计移动端布局，再扩展到桌面端
+2. **断点选择**：767px作为移动端/桌面端分界点
+3. **布局切换**：使用CSS Grid和Flexbox order属性控制布局顺序
+4. **内容隐藏**：使用`display: none`而非`visibility: hidden`
+
+#### 组件状态管理
+1. **条件渲染**：使用`v-if`进行条件显示，避免不必要的DOM渲染
+2. **状态计算**：使用`computed`属性实现响应式状态计算
+3. **数据持久化**：使用localStorage存储购买状态
+4. **状态同步**：确保组件状态与全局状态保持同步
+
+### 性能优化考虑
+
+#### CSS性能
+- 避免复杂的CSS选择器
+- 使用CSS变量提高可维护性
+- 合理使用CSS Grid避免重排重绘
+
+#### JavaScript性能
+- 使用`computed`属性缓存计算结果
+- 避免在模板中进行复杂计算
+- 合理使用`v-if`和`v-show`
+
+#### 响应式性能
+- 使用CSS媒体查询而非JavaScript检测设备
+- 避免频繁的DOM操作
+- 使用CSS transform进行动画优化
+
+### 维护指南
+
+#### 样式修改
+1. 优先修改设计令牌而非直接修改组件样式
+2. 新增媒体查询时考虑对现有布局的影响
+3. 使用CSS变量提高样式的可维护性
+
+#### 布局调整
+1. 修改Grid布局比例时需要同时考虑所有断点
+2. 新增响应式断点时需要测试所有设备尺寸
+3. 布局修改后需要验证粘性定位是否正常工作
+
+#### 组件状态
+1. 修改条件渲染逻辑时需要考虑所有可能的状态组合
+2. 新增状态管理时需要确保数据持久化
+3. 状态变更时需要验证UI更新是否正确

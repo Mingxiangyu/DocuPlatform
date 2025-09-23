@@ -16,13 +16,19 @@ import DSScrollProgress from '../../components/atoms/DSScrollProgress.vue'
 import DSCategoryCard from '../../components/molecules/DSCategoryCard.vue'
 import DSArticleCard from '../../components/molecules/DSArticleCard.vue'
 import DSCategoryNavigation from '../../components/molecules/DSCategoryNavigation.vue'
+import DSTableOfContents from '../../components/molecules/DSTableOfContents.vue'
+import DSBreadcrumbNavigation from '../../components/molecules/DSBreadcrumbNavigation.vue'
+import DSArticleHeader from '../../components/molecules/DSArticleHeader.vue'
+import DSArticleActions from '../../components/molecules/DSArticleActions.vue'
 
 // 有机组件 (Organisms)
 import DSCategoryGrid from '../../components/organisms/DSCategoryGrid.vue'
 import DSHeader from '../../components/organisms/DSHeader.vue'
+import DSArticleContent from '../../components/organisms/DSArticleContent.vue'
 
 // 模板组件 (Templates)
 import DSDefaultLayout from '../../components/templates/DSDefaultLayout.vue'
+import DSArticleDetailLayout from '../../components/templates/DSArticleDetailLayout.vue'
 
 // 组件配置接口
 interface ComponentConfig {
@@ -180,6 +186,98 @@ export const componentRegistry: Record<string, ComponentConfig> = {
     },
     dependencies: ['DSHeader', 'DSScrollProgress'],
     tags: ['layout', 'template', 'global', 'responsive']
+  },
+
+  'DSArticleDetailLayout': {
+    component: DSArticleDetailLayout,
+    category: 'template',
+    version: '1.0.0',
+    description: '文章详情页面布局模板，支持三栏布局和滚动进度条',
+    defaultProps: {
+      article: null,
+      author: null,
+      tags: [],
+      articleContent: ''
+    },
+    dependencies: ['DSBreadcrumbNavigation', 'DSTableOfContents', 'DSArticleHeader', 'DSArticleContent', 'DSArticleActions'],
+    tags: ['layout', 'template', 'article', 'responsive']
+  },
+
+  'DSTableOfContents': {
+    component: DSTableOfContents,
+    category: 'molecule',
+    version: '1.0.0',
+    description: '智能目录导航组件，支持自动生成和滚动同步',
+    defaultProps: {
+      content: '',
+      autoGenerate: true,
+      maxLevel: 4
+    },
+    tags: ['navigation', 'toc', 'article']
+  },
+
+  'DSBreadcrumbNavigation': {
+    component: DSBreadcrumbNavigation,
+    category: 'molecule',
+    version: '1.0.0',
+    description: '面包屑导航组件，支持自动生成和路由集成',
+    defaultProps: {
+      items: [],
+      backLink: '/articles',
+      backText: '返回列表',
+      autoGenerate: true
+    },
+    tags: ['navigation', 'breadcrumb', 'routing']
+  },
+
+  'DSArticleHeader': {
+    component: DSArticleHeader,
+    category: 'molecule',
+    version: '1.0.0',
+    description: '文章头部信息组件，展示标题、作者、标签等',
+    defaultProps: {
+      article: undefined,
+      author: undefined,
+      tags: []
+    },
+    tags: ['article', 'header', 'metadata']
+  },
+
+  'DSArticleActions': {
+    component: DSArticleActions,
+    category: 'molecule',
+    version: '1.0.0',
+    description: '文章操作按钮组件，包含点赞、分享、收藏等功能',
+    defaultProps: {
+      articleId: '',
+      isPaid: false,
+      isPurchased: false,
+      price: 0,
+      isLiked: false,
+      isBookmarked: false,
+      likeCount: 0,
+      canEdit: false
+    },
+    tags: ['article', 'actions', 'interactive']
+  },
+
+  'DSArticleContent': {
+    component: DSArticleContent,
+    category: 'organism',
+    version: '1.0.0',
+    description: '文章内容渲染组件，集成虚拟DOM高亮系统和付费墙',
+    defaultProps: {
+      content: '',
+      isPaid: false,
+      isPurchased: false,
+      price: 0,
+      enableHighlights: true,
+      useSerifFont: true,
+      isLoading: false,
+      articleId: ''
+    },
+    dependencies: ['VirtualHighlightRenderer', 'HighlightToolbar'],
+    tags: ['article', 'content', 'highlight', 'paywall']
   }
 }
 

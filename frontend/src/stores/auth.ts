@@ -10,7 +10,7 @@ const checkBackendAvailable = async (): Promise<boolean> => {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 3000)
 
-    const response = await fetch('/health', {
+    const response = await fetch('http://localhost:8000/health', {
       method: 'GET',
       signal: controller.signal
     })
@@ -39,14 +39,33 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 初始化认证状态
   const initAuth = () => {
-    const storedToken = localStorage.getItem('auth_token')
-    const storedRefreshToken = localStorage.getItem('refresh_token')
-    const storedUser = localStorage.getItem('user_data')
+    try {
+      const storedToken = localStorage.getItem('auth_token')
+      const storedRefreshToken = localStorage.getItem('refresh_token')
+      const storedUser = localStorage.getItem('user_data')
 
-    if (storedToken && storedUser) {
-      token.value = storedToken
-      refreshToken.value = storedRefreshToken
-      user.value = JSON.parse(storedUser)
+      console.log('initAuth - 检查localStorage:', {
+        hasToken: !!storedToken,
+        hasRefreshToken: !!storedRefreshToken,
+        hasUser: !!storedUser,
+        token: storedToken?.substring(0, 20) + '...',
+        user: storedUser ? JSON.parse(storedUser).email : null
+      })
+
+      if (storedToken && storedUser) {
+        token.value = storedToken
+        refreshToken.value = storedRefreshToken
+        user.value = JSON.parse(storedUser)
+        console.log('initAuth - 认证状态已恢复:', user.value.email)
+      } else {
+        console.log('initAuth - 未找到有效的认证信息')
+      }
+    } catch (error) {
+      console.error('initAuth - 初始化认证状态失败:', error)
+      // 清理可能损坏的数据
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user_data')
     }
   }
 
@@ -58,7 +77,8 @@ export const useAuthStore = defineStore('auth', () => {
 
       // 检查是否为开发模式且后端不可用，使用模拟数据
       const isDev = import.meta.env.DEV
-      const useMockData = isDev // 暂时总是使用模拟数据
+      const backendAvailable = await checkBackendAvailable()
+      const useMockData = isDev && !backendAvailable
 
       if (useMockData) {
         // 模拟API调用延迟
@@ -99,7 +119,7 @@ export const useAuthStore = defineStore('auth', () => {
         }
       } else {
         // 真实API调用
-        const response = await apiClient.post<LoginResponse>('/auth/login', credentials)
+        const response = await apiClient.post<LoginResponse>('/api/auth/login', credentials)
 
         if (response.success && response.data) {
           const { user: userData, token: authToken, refreshToken: refreshTokenData } = response.data
@@ -175,7 +195,7 @@ export const useAuthStore = defineStore('auth', () => {
         return { success: true }
       } else {
         // 真实API调用
-        const response = await apiClient.post<LoginResponse>('/auth/register', userData)
+        const response = await apiClient.post<LoginResponse>('/api/auth/register', userData)
 
         if (response.success && response.data) {
           const { user: newUser, token: authToken, refreshToken: refreshTokenData } = response.data
@@ -211,7 +231,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       // 调用后端登出接口
       if (token.value) {
-        await apiClient.post('/auth/logout')
+        await apiClient.post('/api/auth/logout')
       }
     } catch (err) {
       console.warn('登出请求失败:', err)
@@ -273,7 +293,7 @@ export const useAuthStore = defineStore('auth', () => {
       isLoading.value = true
       error.value = null
 
-      const response = await apiClient.post('/auth/verify-email', { token })
+      const response = await apiClient.post('/api/auth/verify-email', { token })
       
       if (response.success) {
         if (user.value) {
@@ -298,7 +318,7 @@ export const useAuthStore = defineStore('auth', () => {
       isLoading.value = true
       error.value = null
 
-      const response = await apiClient.post('/auth/reset-password', { email })
+      const response = await apiClient.post('/api/auth/reset-password', { email })
       
       if (response.success) {
         return { success: true, message: '重置邮件已发送' }

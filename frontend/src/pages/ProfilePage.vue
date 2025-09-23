@@ -53,7 +53,7 @@
               </div>
 
               <div class="flex items-center">
-                <div class="w-5 h-5 mr-2" :class="user?.emailVerified ? 'text-green-500' : 'text-yellow-500'">
+                <div class="icon-size mr-2" :class="user?.emailVerified ? 'text-green-500' : 'text-yellow-500'">
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
@@ -198,7 +198,7 @@
               <h3 class="text-xl font-semibold text-gray-900 mb-3">暂无购买记录</h3>
               <p class="text-gray-600 mb-6 max-w-sm mx-auto">去发现一些优质的付费内容，开始你的知识之旅吧</p>
               <DSButton @click="goToArticles" variant="primary" size="lg">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="icon-size mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
                 浏览文章
@@ -608,3 +608,12 @@ onMounted(() => {
   }
 })
 </script>
+
+<style scoped>
+/* 修复SVG图标尺寸问题 */
+.icon-size {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  flex-shrink: 0;
+}
+</style>

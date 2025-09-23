@@ -11,11 +11,11 @@ import { errorHandler } from './middleware/errorHandler'
 import { requestLogger } from './middleware/requestLogger'
 import { authRoutes } from './routes/auth'
 import { healthRoutes } from './routes/health'
+import articleRoutes from './routes/articles'
+import orderRoutes from './routes/orders'
 // TODO: 其他路由将在后续步骤中实现
-// import { articleRoutes } from './routes/articles'
 // import { noteRoutes } from './routes/notes'
 // import { highlightRoutes } from './routes/highlights'
-// import { orderRoutes } from './routes/orders'
 // import { collectionRoutes } from './routes/collections'
 // import { uploadRoutes } from './routes/upload'
 
@@ -50,7 +50,7 @@ app.use(helmet({
 
 // CORS配置
 app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
+  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -86,11 +86,11 @@ app.use('/health', healthRoutes)
 
 // API路由
 app.use('/api/auth', authRoutes)
+app.use('/api/articles', articleRoutes)
+app.use('/api/orders', orderRoutes)
 // TODO: 其他路由将在后续步骤中实现
-// app.use('/api/articles', articleRoutes)
 // app.use('/api/notes', noteRoutes)
 // app.use('/api/highlights', highlightRoutes)
-// app.use('/api/orders', orderRoutes)
 // app.use('/api/collections', collectionRoutes)
 // app.use('/api/upload', uploadRoutes)
 

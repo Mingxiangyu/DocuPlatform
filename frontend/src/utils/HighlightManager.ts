@@ -2,9 +2,9 @@ import type {
   HighlightInfo,
   IHighlightManager,
   SelectionRange,
-  HighlightRenderConfig,
-  DEFAULT_HIGHLIGHT_CONFIG
+  HighlightRenderConfig
 } from '../types/virtual-dom'
+import { DEFAULT_HIGHLIGHT_CONFIG } from '../types/virtual-dom'
 import type { VirtualDOMManager } from './VirtualDOMManager'
 import type { TextSelector } from './TextSelector'
 import { eventBus } from './EventBus'

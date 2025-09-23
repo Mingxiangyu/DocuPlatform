@@ -223,6 +223,7 @@ import { computed, ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useDesignTokens } from '../design-system/composables'
 import { eventBus } from '../utils/EventBus'
+import { useAuthStore } from '../stores/auth'
 
 // 表单数据接口
 interface LoginFormData {
@@ -257,6 +258,7 @@ interface SocialProvider {
 const router = useRouter()
 const route = useRoute()
 const { tokens, getColor, getSpacing, getShadow } = useDesignTokens()
+const authStore = useAuthStore()
 
 // 状态管理
 const isLoading = ref(false)
@@ -664,25 +666,33 @@ const handleSubmit = async () => {
   // 验证所有字段
   validateField('email')
   validateField('password')
-  
+
   if (!isFormValid.value) {
     return
   }
-  
+
   try {
     isLoading.value = true
     globalError.value = ''
-    
-    // 模拟登录API调用
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // 模拟登录成功
-    eventBus.emit('notification:show', { type: 'success', message: '登录成功！' })
-    
-    // 重定向到目标页面
-    const redirect = route.query.redirect as string || '/'
-    router.push(redirect)
-    
+
+    // 调用真实的登录API
+    const result = await authStore.login({
+      email: formData.email,
+      password: formData.password
+    })
+
+    if (result.success) {
+      // 登录成功
+      eventBus.emit('notification:show', { type: 'success', message: '登录成功！' })
+
+      // 重定向到目标页面
+      const redirect = route.query.redirect as string || '/'
+      router.push(redirect)
+    } else {
+      // 登录失败
+      globalError.value = result.error || '登录失败，请检查邮箱和密码'
+    }
+
   } catch (error) {
     globalError.value = '登录失败，请检查邮箱和密码'
     console.error('Login error:', error)

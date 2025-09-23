@@ -1,9 +1,9 @@
-import type { 
-  VirtualTextNode, 
-  IVirtualDOMManager, 
-  VirtualDOMConfig,
-  DEFAULT_VIRTUAL_DOM_CONFIG 
+import type {
+  VirtualTextNode,
+  IVirtualDOMManager,
+  VirtualDOMConfig
 } from '../types/virtual-dom'
+import { DEFAULT_VIRTUAL_DOM_CONFIG } from '../types/virtual-dom'
 
 // LRU缓存实现
 class LRUCache<K, V> {

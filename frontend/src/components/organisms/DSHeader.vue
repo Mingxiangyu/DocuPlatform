@@ -115,15 +115,16 @@
             </svg>
           </button>
 
-          <!-- 用户头像 (始终显示) -->
+          <!-- 用户头像 (仅在已登录时显示) -->
           <button
+            v-if="isAuthenticated"
             class="user-avatar-button"
             :style="userAvatarButtonStyles"
-            :aria-label="isAuthenticated ? `用户菜单 - ${user?.name || '用户'}` : '用户菜单'"
-            @click="isAuthenticated ? toggleUserMenu() : handleLogin()"
+            :aria-label="`用户菜单 - ${user?.name || '用户'}`"
+            @click="toggleUserMenu()"
           >
             <img
-              v-if="isAuthenticated && user?.avatar"
+              v-if="user?.avatar"
               :src="user.avatar"
               :alt="user.name"
               class="user-avatar"
@@ -141,7 +142,7 @@
           </button>
 
           <!-- 未登录状态 - 隐藏登录注册按钮以匹配原型 -->
-          <div v-if="false" class="auth-actions" :style="authActionsStyles">
+          <div v-if="!isAuthenticated" class="auth-actions" :style="authActionsStyles">
             <DSButton
               variant="ghost"
               size="sm"
@@ -161,82 +162,38 @@
           </div>
 
           <!-- 已登录状态 -->
-          <div v-else class="user-menu" :style="userMenuStyles">
-            <!-- 通知按钮 -->
-            <button
-              class="notification-button"
-              :style="notificationButtonStyles"
-              :aria-label="`通知 ${unreadCount > 0 ? `(${unreadCount}条未读)` : ''}`"
-              @click="toggleNotifications"
+          <div v-else-if="isAuthenticated" class="user-menu" :style="userMenuStyles">
+            <!-- 用户下拉菜单 -->
+            <div
+              v-if="showUserMenu"
+              class="user-dropdown"
+              :style="userDropdownStyles"
+              role="menu"
             >
-              <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-              </svg>
-              <span
-                v-if="unreadCount > 0"
-                class="notification-badge"
-                :style="notificationBadgeStyles"
+              <router-link
+                v-for="menuItem in userMenuItems"
+                :key="menuItem.path"
+                :to="menuItem.path"
+                class="dropdown-item"
+                :style="dropdownItemStyles"
+                role="menuitem"
+                @click="closeUserMenu"
               >
-                {{ unreadCount > 99 ? '99+' : unreadCount }}
-              </span>
-            </button>
-
-            <!-- 用户头像和菜单 -->
-            <div class="user-avatar-container" :style="userAvatarContainerStyles">
+                <component :is="menuItem.icon" class="dropdown-icon" />
+                <span>{{ menuItem.label }}</span>
+              </router-link>
+              <hr class="dropdown-divider" :style="dropdownDividerStyles" />
               <button
-                class="user-avatar-button"
-                :style="userAvatarButtonStyles"
-                :aria-label="`用户菜单 - ${user?.name || '用户'}`"
-                @click="toggleUserMenu"
+                class="dropdown-item logout-item"
+                :style="dropdownItemStyles"
+                role="menuitem"
+                @click="handleLogout"
               >
-                <img
-                  v-if="user?.avatar"
-                  :src="user.avatar"
-                  :alt="user.name"
-                  class="user-avatar"
-                  :style="userAvatarStyles"
-                />
-                <div
-                  v-else
-                  class="user-avatar-placeholder"
-                  :style="userAvatarPlaceholderStyles"
-                >
-                  {{ (user?.name || 'U').charAt(0).toUpperCase() }}
-                </div>
+                <svg class="dropdown-icon" width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                </svg>
+                <span>退出登录</span>
               </button>
-
-              <!-- 用户下拉菜单 -->
-              <div
-                v-if="showUserMenu"
-                class="user-dropdown"
-                :style="userDropdownStyles"
-                role="menu"
-              >
-                <router-link
-                  v-for="menuItem in userMenuItems"
-                  :key="menuItem.path"
-                  :to="menuItem.path"
-                  class="dropdown-item"
-                  :style="dropdownItemStyles"
-                  role="menuitem"
-                  @click="closeUserMenu"
-                >
-                  <component :is="menuItem.icon" class="dropdown-icon" />
-                  <span>{{ menuItem.label }}</span>
-                </router-link>
-                <hr class="dropdown-divider" :style="dropdownDividerStyles" />
-                <button
-                  class="dropdown-item logout-item"
-                  :style="dropdownItemStyles"
-                  role="menuitem"
-                  @click="handleLogout"
-                >
-                  <svg class="dropdown-icon" width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
-                  </svg>
-                  <span>退出登录</span>
-                </button>
-              </div>
             </div>
           </div>
 
@@ -436,13 +393,11 @@ const headerRef = ref<HTMLElement | null>(null)
 const searchQuery = ref('')
 const showUserMenu = ref(false)
 const showMobileMenu = ref(false)
-const showNotifications = ref(false)
 const searchFocused = ref(false)
 
 // 计算属性
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const user = computed(() => authStore.user)
-const unreadCount = computed(() => 0) // 从通知store获取
 
 // 导航项配置
 const navigationItems: NavigationItem[] = [
@@ -687,40 +642,7 @@ const userMenuStyles = computed(() => ({
   gap: getSpacing(4)
 }))
 
-// 通知和用户相关样式
-const notificationButtonStyles = computed(() => ({
-  position: 'relative',
-  padding: getSpacing(2),
-  borderRadius: tokens.borderRadius.md,
-  border: 'none',
-  backgroundColor: 'transparent',
-  color: getColor('gray.600'),
-  cursor: 'pointer',
-  transition: 'all 0.2s ease'
-}))
-
-const notificationBadgeStyles = computed(() => ({
-  position: 'absolute',
-  top: '0',
-  right: '0',
-  transform: 'translate(25%, -25%)',
-  backgroundColor: getColor('error.500'),
-  color: 'white',
-  fontSize: tokens.typography.fontSize.xs[0],
-  fontWeight: tokens.typography.fontWeight.bold,
-  padding: '2px 6px',
-  borderRadius: tokens.borderRadius.full,
-  minWidth: '18px',
-  height: '18px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center'
-}))
-
-const userAvatarContainerStyles = computed(() => ({
-  position: 'relative'
-}))
-
+// 用户相关样式
 const userAvatarButtonStyles = computed(() => ({
   padding: '2px',
   borderRadius: tokens.borderRadius.full,
@@ -913,20 +835,10 @@ const handleLogout = async () => {
 
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
-  if (showUserMenu.value) {
-    showNotifications.value = false
-  }
 }
 
 const closeUserMenu = () => {
   showUserMenu.value = false
-}
-
-const toggleNotifications = () => {
-  showNotifications.value = !showNotifications.value
-  if (showNotifications.value) {
-    showUserMenu.value = false
-  }
 }
 
 const toggleMobileMenu = () => {
@@ -963,7 +875,6 @@ const handleClickOutside = (event: Event) => {
   const target = event.target as HTMLElement
   if (headerRef.value && !headerRef.value.contains(target)) {
     showUserMenu.value = false
-    showNotifications.value = false
   }
 }
 
@@ -979,7 +890,6 @@ onUnmounted(() => {
 // 监听路由变化关闭菜单
 watch(route, () => {
   showUserMenu.value = false
-  showNotifications.value = false
   showMobileMenu.value = false
 })
 </script>
@@ -1004,7 +914,6 @@ watch(route, () => {
   box-shadow: 0 0 0 3px var(--color-primary-100);
 }
 
-.notification-button:hover,
 .user-avatar-button:hover,
 .mobile-menu-button:hover {
   background-color: var(--color-gray-100);
@@ -1090,7 +999,6 @@ watch(route, () => {
   .user-dropdown,
   .nav-item,
   .search-input,
-  .notification-button,
   .user-avatar-button,
   .mobile-menu-button {
     transition: none !important;
