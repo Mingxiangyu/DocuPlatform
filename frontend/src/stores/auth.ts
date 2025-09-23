@@ -4,24 +4,6 @@ import type { User, LoginRequest, RegisterRequest, LoginResponse } from '../type
 import { apiClient } from '../services/ApiClient'
 import { eventBus } from '../utils/EventBus'
 
-// 检查后端是否可用
-const checkBackendAvailable = async (): Promise<boolean> => {
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 3000)
-
-    const response = await fetch('http://localhost:8000/health', {
-      method: 'GET',
-      signal: controller.signal
-    })
-
-    clearTimeout(timeoutId)
-    return response.ok
-  } catch {
-    return false
-  }
-}
-
 export const useAuthStore = defineStore('auth', () => {
   // 状态
   const user = ref<User | null>(null)
@@ -37,35 +19,21 @@ export const useAuthStore = defineStore('auth', () => {
     user.value?.role === 'CONTENT_MANAGER' || user.value?.role === 'ADMIN'
   )
 
-  // 初始化认证状态
+  // 初始化认证状态（简化版，Pinia插件会自动恢复状态）
   const initAuth = () => {
-    try {
-      const storedToken = localStorage.getItem('auth_token')
-      const storedRefreshToken = localStorage.getItem('refresh_token')
-      const storedUser = localStorage.getItem('user_data')
+    console.log('initAuth - 当前认证状态:', {
+      isAuthenticated: isAuthenticated.value,
+      hasUser: !!user.value,
+      hasToken: !!token.value,
+      userEmail: user.value?.email
+    })
 
-      console.log('initAuth - 检查localStorage:', {
-        hasToken: !!storedToken,
-        hasRefreshToken: !!storedRefreshToken,
-        hasUser: !!storedUser,
-        token: storedToken?.substring(0, 20) + '...',
-        user: storedUser ? JSON.parse(storedUser).email : null
-      })
-
-      if (storedToken && storedUser) {
-        token.value = storedToken
-        refreshToken.value = storedRefreshToken
-        user.value = JSON.parse(storedUser)
-        console.log('initAuth - 认证状态已恢复:', user.value.email)
-      } else {
-        console.log('initAuth - 未找到有效的认证信息')
-      }
-    } catch (error) {
-      console.error('initAuth - 初始化认证状态失败:', error)
-      // 清理可能损坏的数据
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('refresh_token')
-      localStorage.removeItem('user_data')
+    // 如果有认证信息但状态不一致，清理数据
+    if ((user.value && !token.value) || (!user.value && token.value)) {
+      console.warn('initAuth - 认证状态不一致，清理数据')
+      user.value = null
+      token.value = null
+      refreshToken.value = null
     }
   }
 
@@ -75,72 +43,23 @@ export const useAuthStore = defineStore('auth', () => {
       isLoading.value = true
       error.value = null
 
-      // 检查是否为开发模式且后端不可用，使用模拟数据
-      const isDev = import.meta.env.DEV
-      const backendAvailable = await checkBackendAvailable()
-      const useMockData = isDev && !backendAvailable
+      // 真实API调用
+      const response = await apiClient.post<LoginResponse>('/api/auth/login', credentials)
 
-      if (useMockData) {
-        // 模拟API调用延迟
-        await new Promise(resolve => setTimeout(resolve, 1000))
+      if (response.success && response.data) {
+        const { user: userData, token: authToken, refreshToken: refreshTokenData } = response.data
 
-        // 模拟登录验证
-        if (credentials.email === 'demo@docuvault.com' && credentials.password === 'demo123') {
-          const mockUser: User = {
-            id: '1',
-            email: credentials.email,
-            nickname: '演示用户',
-            avatarUrl: '',
-            role: 'USER',
-            emailVerified: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }
+        // 更新状态（Pinia插件会自动持久化）
+        user.value = userData
+        token.value = authToken
+        refreshToken.value = refreshTokenData
 
-          const mockToken = 'mock-jwt-token-' + Date.now()
-          const mockRefreshToken = 'mock-refresh-token-' + Date.now()
+        // 触发登录事件
+        eventBus.emit('user:login', { userId: userData.id, token: authToken })
 
-          // 更新状态
-          user.value = mockUser
-          token.value = mockToken
-          refreshToken.value = mockRefreshToken
-
-          // 持久化存储
-          localStorage.setItem('auth_token', mockToken)
-          localStorage.setItem('refresh_token', mockRefreshToken)
-          localStorage.setItem('user_data', JSON.stringify(mockUser))
-
-          // 触发登录事件
-          eventBus.emit('user:login', { userId: mockUser.id, token: mockToken })
-
-          return { success: true }
-        } else {
-          throw new Error('邮箱或密码错误（演示账号：demo@docuvault.com / demo123）')
-        }
+        return { success: true }
       } else {
-        // 真实API调用
-        const response = await apiClient.post<LoginResponse>('/api/auth/login', credentials)
-
-        if (response.success && response.data) {
-          const { user: userData, token: authToken, refreshToken: refreshTokenData } = response.data
-
-          // 更新状态
-          user.value = userData
-          token.value = authToken
-          refreshToken.value = refreshTokenData
-
-          // 持久化存储
-          localStorage.setItem('auth_token', authToken)
-          localStorage.setItem('refresh_token', refreshTokenData)
-          localStorage.setItem('user_data', JSON.stringify(userData))
-
-          // 触发登录事件
-          eventBus.emit('user:login', { userId: userData.id, token: authToken })
-
-          return { success: true }
-        } else {
-          throw new Error(response.message || '登录失败')
-        }
+        throw new Error(response.message || '登录失败')
       }
     } catch (err: any) {
       error.value = err.response?.data?.message || err.message || '登录失败'
@@ -156,67 +75,23 @@ export const useAuthStore = defineStore('auth', () => {
       isLoading.value = true
       error.value = null
 
-      // 检查是否为开发模式且后端不可用，使用模拟数据
-      const isDev = import.meta.env.DEV
-      const useMockData = isDev && !await checkBackendAvailable()
+      // 真实API调用
+      const response = await apiClient.post<LoginResponse>('/api/auth/register', userData)
 
-      if (useMockData) {
-        // 模拟API调用延迟
-        await new Promise(resolve => setTimeout(resolve, 1000))
+      if (response.success && response.data) {
+        const { user: newUser, token: authToken, refreshToken: refreshTokenData } = response.data
 
-        // 模拟注册成功
-        const mockUser: User = {
-          id: Date.now().toString(),
-          email: userData.email,
-          nickname: userData.nickname,
-          avatarUrl: '',
-          role: 'USER',
-          emailVerified: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-
-        const mockToken = 'mock-jwt-token-' + Date.now()
-        const mockRefreshToken = 'mock-refresh-token-' + Date.now()
-
-        // 更新状态
-        user.value = mockUser
-        token.value = mockToken
-        refreshToken.value = mockRefreshToken
-
-        // 持久化存储
-        localStorage.setItem('auth_token', mockToken)
-        localStorage.setItem('refresh_token', mockRefreshToken)
-        localStorage.setItem('user_data', JSON.stringify(mockUser))
+        // 更新状态（Pinia插件会自动持久化）
+        user.value = newUser
+        token.value = authToken
+        refreshToken.value = refreshTokenData
 
         // 触发登录事件
-        eventBus.emit('user:login', { userId: mockUser.id, token: mockToken })
+        eventBus.emit('user:login', { userId: newUser.id, token: authToken })
 
         return { success: true }
       } else {
-        // 真实API调用
-        const response = await apiClient.post<LoginResponse>('/api/auth/register', userData)
-
-        if (response.success && response.data) {
-          const { user: newUser, token: authToken, refreshToken: refreshTokenData } = response.data
-
-          // 更新状态
-          user.value = newUser
-          token.value = authToken
-          refreshToken.value = refreshTokenData
-
-          // 持久化存储
-          localStorage.setItem('auth_token', authToken)
-          localStorage.setItem('refresh_token', refreshTokenData)
-          localStorage.setItem('user_data', JSON.stringify(newUser))
-
-          // 触发登录事件
-          eventBus.emit('user:login', { userId: newUser.id, token: authToken })
-
-          return { success: true }
-        } else {
-          throw new Error(response.message || '注册失败')
-        }
+        throw new Error(response.message || '注册失败')
       }
     } catch (err: any) {
       error.value = err.response?.data?.message || err.message || '注册失败'
@@ -236,18 +111,13 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (err) {
       console.warn('登出请求失败:', err)
     } finally {
-      // 清除本地状态
+      // 清除本地状态（Pinia插件会自动清除持久化数据）
       const userId = user.value?.id || ''
-      
+
       user.value = null
       token.value = null
       refreshToken.value = null
       error.value = null
-
-      // 清除本地存储
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('refresh_token')
-      localStorage.removeItem('user_data')
 
       // 触发登出事件
       eventBus.emit('user:logout', { userId })
@@ -261,18 +131,16 @@ export const useAuthStore = defineStore('auth', () => {
       error.value = null
 
       const response = await apiClient.put<User>('/auth/profile', updates)
-      
+
       if (response.success && response.data) {
         const updatedUser = response.data
+        // 更新状态（Pinia插件会自动持久化）
         user.value = updatedUser
 
-        // 更新本地存储
-        localStorage.setItem('user_data', JSON.stringify(updatedUser))
-
         // 触发用户信息更新事件
-        eventBus.emit('user:profile-updated', { 
-          userId: updatedUser.id, 
-          changes: updates 
+        eventBus.emit('user:profile-updated', {
+          userId: updatedUser.id,
+          changes: updates
         })
 
         return { success: true }
@@ -297,8 +165,8 @@ export const useAuthStore = defineStore('auth', () => {
       
       if (response.success) {
         if (user.value) {
+          // 更新用户邮箱验证状态（Pinia插件会自动持久化）
           user.value.emailVerified = true
-          localStorage.setItem('user_data', JSON.stringify(user.value))
         }
         return { success: true }
       } else {
@@ -343,11 +211,11 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return false
 
     try {
-      const response = await apiClient.get<User>('/auth/me')
-      
+      const response = await apiClient.get<User>('/api/auth/me')
+
       if (response.success && response.data) {
+        // 更新用户信息（Pinia插件会自动持久化）
         user.value = response.data
-        localStorage.setItem('user_data', JSON.stringify(response.data))
         return true
       } else {
         await logout()
@@ -365,12 +233,12 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     isLoading,
     error,
-    
+
     // 计算属性
     isAuthenticated,
     isAdmin,
     isContentManager,
-    
+
     // 方法
     initAuth,
     login,
@@ -381,5 +249,16 @@ export const useAuthStore = defineStore('auth', () => {
     resetPassword,
     clearError,
     checkAuth
+  }
+}, {
+  persist: {
+    storage: localStorage,
+    pick: ['user', 'token', 'refreshToken'],
+    beforeHydrate: (ctx) => {
+      console.log('Auth state hydrating...')
+    },
+    afterHydrate: (ctx) => {
+      console.log('Auth state hydrated:', ctx.store.isAuthenticated)
+    }
   }
 })

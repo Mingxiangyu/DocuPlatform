@@ -35,6 +35,8 @@
           <div class="bg-white rounded-lg shadow-sm p-5 sticky top-28 self-start">
             <slot name="table-of-contents">
               <DSTableOfContents
+                :editorId="'article-preview-art-paid-purchased'"
+                :scrollElement="'html'"
                 :content="articleContent"
                 @section-click="handleSectionClick"
               />
@@ -56,10 +58,12 @@
             
             <!-- 文章内容 -->
             <slot name="article-content">
-              <DSArticleContent 
+              <DSArticleContent
                 :content="articleContent"
                 :is-paid="article?.isPaid"
                 :is-purchased="article?.isPurchased"
+                :article-id="article?.id"
+                :preview-id="previewId"
                 @highlight-created="handleHighlightCreated"
               />
             </slot>
@@ -107,6 +111,14 @@ const emit = defineEmits<{
 
 // 设计令牌
 const { tokens } = useDesignTokens()
+
+// 预览组件 ID
+const previewId = computed(() => {
+  const id = `article-preview-${props.article?.id || 'default'}`
+  console.log('DSArticleDetailLayout - previewId computed:', id)
+  console.log('DSArticleDetailLayout - article.id:', props.article?.id)
+  return id
+})
 
 // 滚动进度条
 const scrollProgress = ref(0)

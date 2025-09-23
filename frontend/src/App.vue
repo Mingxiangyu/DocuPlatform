@@ -20,10 +20,10 @@ const authStore = useAuthStore()
 
 // 应用初始化
 onMounted(() => {
-  // 初始化认证状态
+  // 初始化认证状态（Pinia插件会自动恢复状态）
   authStore.initAuth()
 
-  // 检查认证状态
+  // 如果有认证信息，验证token有效性
   if (authStore.isAuthenticated) {
     authStore.checkAuth()
   }

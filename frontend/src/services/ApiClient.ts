@@ -3,6 +3,13 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import type { ApiResponse, ApiError, ApiClientConfig } from '../types/api'
 import { eventBus } from '../utils/EventBus'
 
+// Token获取函数，避免循环依赖
+let getAuthToken: (() => string | null) | null = null
+
+export const setTokenProvider = (provider: () => string | null) => {
+  getAuthToken = provider
+}
+
 export class ApiClient {
   private client: AxiosInstance
   private config: ApiClientConfig
@@ -34,8 +41,8 @@ export class ApiClient {
     // 请求拦截器
     this.client.interceptors.request.use(
       (config) => {
-        // 添加认证token
-        const token = localStorage.getItem('auth_token')
+        // 添加认证token（从Pinia store获取，符合v2.1规范）
+        const token = getAuthToken ? getAuthToken() : null
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
         }

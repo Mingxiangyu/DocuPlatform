@@ -1,4 +1,5 @@
 import { eventBus } from './EventBus'
+import { useAuthStore } from '../stores/auth'
 
 // 数据同步状态
 export interface SyncStatus {
@@ -271,7 +272,9 @@ export class DataSyncManager {
   }
 
   private getAuthToken(): string {
-    return localStorage.getItem('auth_token') || ''
+    // 从Pinia认证store获取token，避免直接访问localStorage
+    const authStore = useAuthStore()
+    return authStore.token || ''
   }
 
   private async checkBackendAvailable(): Promise<boolean> {

@@ -1,8 +1,8 @@
 <template>
   <div class="article-content-wrapper">
     <!-- 付费文章购买提示 -->
-    <div 
-      v-if="isPaid && !isPurchased" 
+    <div
+      v-if="isPaid && !isPurchased"
       class="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-8"
     >
       <div class="flex items-center justify-between">
@@ -15,9 +15,9 @@
             购买后可以阅读完整内容，并支持高亮和笔记功能
           </p>
         </div>
-        <DSButton 
-          @click="handlePurchase" 
-          variant="primary" 
+        <DSButton
+          @click="handlePurchase"
+          variant="primary"
           :loading="isPurchasing"
           class="flex items-center space-x-2"
         >
@@ -30,30 +30,20 @@
     <!-- 文章正文内容 -->
     <div
       ref="contentRef"
-      class="article-content prose prose-lg max-w-none"
-      :class="{ 
+      class="article-content"
+      :class="{
         'blur-sm pointer-events-none': isPaid && !isPurchased,
-        'font-serif': useSerifFont 
+        'font-serif': useSerifFont
       }"
     >
-      <!-- 虚拟DOM高亮渲染器 -->
-      <VirtualHighlightRenderer
-        v-if="enableHighlights && (isPurchased || !isPaid)"
-        :content="renderedContent"
-        :virtual-nodes="virtualNodes"
-        :highlights="highlights"
-        :readonly="!canHighlight"
-        @highlight-click="handleHighlightClick"
-        @highlight-hover="handleHighlightHover"
-        @selection-change="handleSelectionChange"
+      <!-- Markdown 预览组件（暂时强制使用以测试） -->
+      <MdPreview
+        :id="props.previewId || `article-preview-${props.articleId || Date.now()}`"
+        :modelValue="props.content"
+        :theme="'default'"
+        :codeTheme="'github'"
+        class="md-preview-custom"
       />
-      
-      <!-- 普通内容渲染（无高亮功能） -->
-      <div 
-        v-else
-        v-html="renderedContent"
-        class="rendered-content"
-      ></div>
     </div>
 
     <!-- 高亮工具栏 -->
@@ -94,7 +84,8 @@ import DSButton from '@/components/atoms/DSButton.vue'
 import DSSkeletonLoader from '@/components/atoms/DSSkeletonLoader.vue'
 import VirtualHighlightRenderer from '@/components/molecules/VirtualHighlightRenderer.vue'
 import HighlightToolbar from '@/components/molecules/HighlightToolbar.vue'
-// import { marked } from 'marked' // 暂时注释掉，使用简单的HTML渲染
+import { MdPreview } from 'md-editor-v3'
+import 'md-editor-v3/lib/preview.css'
 
 // Props
 interface Props {
@@ -106,6 +97,7 @@ interface Props {
   useSerifFont?: boolean
   isLoading?: boolean
   articleId?: string
+  previewId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -116,7 +108,8 @@ const props = withDefaults(defineProps<Props>(), {
   enableHighlights: true,
   useSerifFont: true,
   isLoading: false,
-  articleId: ''
+  articleId: '',
+  previewId: ''
 })
 
 // Emits
@@ -143,11 +136,11 @@ const toolbarPosition = ref({ x: 0, y: 0 })
 const selectedText = ref('')
 const selectedRange = ref<Range | null>(null)
 
+
 // 计算属性
 const renderedContent = computed(() => {
+  // 保留用于高亮功能的简单渲染
   if (!props.content) return ''
-
-  // 简单的Markdown到HTML转换（临时解决方案）
   return props.content
     .replace(/\n/g, '<br>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -290,6 +283,16 @@ onUnmounted(() => {
 }
 
 .article-content.font-serif {
+  font-family: v-bind('tokens.typography.fontFamily.serif?.join(", ") || tokens.typography.fontFamily.sans.join(", ")');
+}
+
+/* MdPreview 自定义样式 */
+.md-preview-custom {
+  background: transparent;
+  font-family: v-bind('tokens.typography.fontFamily.sans.join(", ")');
+}
+
+.md-preview-custom.font-serif {
   font-family: v-bind('tokens.typography.fontFamily.serif?.join(", ") || tokens.typography.fontFamily.sans.join(", ")');
 }
 

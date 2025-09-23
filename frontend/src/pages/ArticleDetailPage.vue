@@ -186,11 +186,7 @@ const loadArticle = async () => {
     isLoading.value = true
     error.value = ''
 
-    // 如果用户已登录，先加载购买记录
-    if (authStore.isAuthenticated) {
-      await paymentStore.loadUserPurchases()
-    }
-
+    // 加载文章数据（购买记录会由payment store自动加载）
     await articlesStore.fetchArticle(articleId)
     article.value = articlesStore.currentArticle
 

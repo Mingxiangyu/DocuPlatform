@@ -388,7 +388,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </DSCard>
 
       <!-- 编辑资料模态框 -->
       <div v-if="showEditProfile" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

@@ -4,19 +4,8 @@ import type { Article, CreateArticleRequest, UpdateArticleRequest, PaginationPar
 import { apiClient } from '../services/ApiClient'
 import { eventBus } from '../utils/EventBus'
 
-// 检查后端健康状态
-const checkBackendHealth = async (): Promise<boolean> => {
-  try {
-    const response = await fetch('http://localhost:8000/health', {
-      method: 'GET',
-      timeout: 3000
-    } as RequestInit)
-    return response.ok
-  } catch (error) {
-    console.warn('Backend health check failed:', error)
-    return false
-  }
-}
+// 注意：根据v2.1认证状态管理重构规范，已移除后端健康检查逻辑
+// 所有API调用必须通过真实后端进行，严禁模拟逻辑
 
 // 模拟文章数据 - 基于后端Prisma Schema构建
 const mockArticles: Article[] = [
@@ -525,93 +514,27 @@ export const useArticlesStore = defineStore('articles', () => {
       isLoading.value = true
       error.value = null
 
-      // 检查是否为开发模式且后端不可用，使用模拟数据
-      const isDev = import.meta.env.DEV
-      const backendAvailable = await checkBackendHealth()
-      const useMockData = isDev && !backendAvailable
+      // 真实API调用（v2.1版本：移除所有模拟逻辑）
+      const response = await apiClient.get<Article>(`/api/articles/${id}`)
 
-      if (useMockData) {
-        // 模拟API调用延迟
-        await new Promise(resolve => setTimeout(resolve, 800))
+      if (response.success && response.data) {
+        currentArticle.value = response.data
 
-        // 查找模拟文章
-        const mockArticle = mockArticles.find(article => article.id === id)
-
-        if (mockArticle) {
-          // 创建完整的文章内容
-          const fullArticle: Article = {
-            ...mockArticle,
-            content: `
-              <h2>引言</h2>
-              <p>这是一篇关于${mockArticle.title}的详细文章。在这里我们将深入探讨相关的技术概念和实践经验。</p>
-
-              <h2>核心概念</h2>
-              <p>首先，让我们了解一些基础概念。这些概念对于理解后续内容至关重要。</p>
-
-              <blockquote>
-                <p>知识的价值在于分享和传播，通过深入的学习和实践，我们能够不断提升自己的技能水平。</p>
-              </blockquote>
-
-              <h3>技术要点</h3>
-              <ul>
-                <li>理解基础原理和概念</li>
-                <li>掌握实际应用场景</li>
-                <li>学会最佳实践方法</li>
-                <li>避免常见的陷阱和错误</li>
-              </ul>
-
-              <h2>实践案例</h2>
-              <p>让我们通过一个具体的例子来说明这些概念的应用：</p>
-
-              <pre><code>// 示例代码
-function example() {
-  console.log('这是一个示例');
-  return 'success';
-}</code></pre>
-
-              <h2>总结</h2>
-              <p>通过本文的学习，我们了解了相关的技术概念和实践方法。希望这些内容对你的学习和工作有所帮助。</p>
-
-              <p>如果你有任何问题或建议，欢迎在评论区留言讨论。</p>
-            `
-          }
-
-          currentArticle.value = fullArticle
-
-          // 更新文章列表中的对应项
-          const index = articles.value.findIndex(article => article.id === id)
-          if (index !== -1) {
-            articles.value[index] = fullArticle
-          }
-
-          // 触发文章查看事件
-          eventBus.emit('article:viewed', { articleId: id })
-
-          return { success: true, data: fullArticle }
-        } else {
-          throw new Error('文章不存在')
+        // 更新文章列表中的对应项
+        const index = articles.value.findIndex(article => article.id === id)
+        if (index !== -1) {
+          articles.value[index] = response.data
         }
+
+        // 触发文章查看事件
+        eventBus.emit('article:viewed', { articleId: id })
+
+        return { success: true, data: response.data }
       } else {
-        // 真实API调用
-        const response = await apiClient.get<Article>(`/api/articles/${id}`)
-
-        if (response.success && response.data) {
-          currentArticle.value = response.data
-
-          // 更新文章列表中的对应项
-          const index = articles.value.findIndex(article => article.id === id)
-          if (index !== -1) {
-            articles.value[index] = response.data
-          }
-
-          // 触发文章查看事件
-          eventBus.emit('article:viewed', { articleId: id })
-
-          return { success: true, data: response.data }
-        } else {
-          throw new Error(response.message || '获取文章失败')
-        }
+        throw new Error(response.message || '获取文章失败')
       }
+
+
     } catch (err: any) {
       error.value = err.response?.data?.message || err.message || '获取文章失败'
       return { success: false, error: error.value }
