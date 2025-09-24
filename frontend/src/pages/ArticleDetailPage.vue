@@ -88,6 +88,14 @@
           :is-paid="article?.isPaid"
           :is-purchased="hasPurchased"
           :price="article?.price"
+          :original-price="paywallData?.originalPrice"
+          :word-count="paywallData?.wordCount"
+          :knowledge-points="paywallData?.knowledgePoints"
+          :purchase-count="paywallData?.purchaseCount"
+          :satisfaction-rate="paywallData?.satisfactionRate"
+          :reading-time="paywallData?.readingTime"
+          :author="paywallData?.author"
+          :reviews="paywallData?.reviews"
           :article-id="article?.id"
           :is-loading="isLoading"
           @purchase="handlePurchase"
@@ -171,6 +179,54 @@ const isBookmarked = computed(() => {
 
 const canEdit = computed(() => {
   return authStore.user?.id === article.value?.author?.id || authStore.user?.role === 'admin'
+})
+
+// 付费墙数据计算
+const paywallData = computed(() => {
+  if (!article.value) return null
+
+  // 计算字数
+  const content = article.value.content || ''
+  const chineseChars = (content.match(/[\u4e00-\u9fa5]/g) || []).length
+  const englishWords = (content.match(/[a-zA-Z]+/g) || []).length
+  const wordCount = chineseChars + englishWords
+
+  // 计算知识点数量（基于标题数量）
+  const headings = (content.match(/#{1,6}\s/g) || []).length
+  const knowledgePoints = Math.max(headings, 3)
+
+  // 计算阅读时间（中文每分钟300字）
+  const readingTime = Math.ceil(wordCount / 300)
+
+  // 计算原价（假设有20%折扣）
+  const originalPrice = article.value.price ? Number(article.value.price) * 1.25 : 0
+
+  // 模拟购买数据（基于浏览量估算）
+  const purchaseCount = Math.floor((article.value.viewCount || 0) * 0.15)
+
+  // 模拟满意度（基于点赞率）
+  const satisfactionRate = article.value.viewCount > 0
+    ? Math.min(95, Math.floor(((article.value.likeCount || 0) / article.value.viewCount) * 100) + 85)
+    : 90
+
+  return {
+    wordCount,
+    knowledgePoints,
+    readingTime,
+    originalPrice,
+    purchaseCount,
+    satisfactionRate,
+    author: article.value.author ? {
+      id: article.value.author.id,
+      nickname: article.value.author.nickname,
+      avatarUrl: article.value.author.avatarUrl,
+      bio: `专业内容创作者`,
+      rating: 4.5 + Math.random() * 0.4, // 4.5-4.9之间
+      reviewCount: Math.floor(purchaseCount * 0.3),
+      quote: '感谢您阅读我的文章，希望对您的学习和工作有所帮助。'
+    } : null,
+    reviews: [] // 暂时为空，后续可以从API获取真实评价
+  }
 })
 
 // 方法
