@@ -1,7 +1,7 @@
-import { Router } from 'express'
+import { Router, Request, Response } from 'express'
 import { prisma } from '../server'
 import { asyncHandler, createSuccessResponse, createErrorResponse } from '../middleware/errorHandler'
-import { BusinessLogger } from '../utils/logger'
+// import { BusinessLogger } from '../utils/logger' // 暂时注释掉未使用的导入
 
 const router = Router()
 
@@ -9,7 +9,7 @@ const router = Router()
  * 获取文章列表
  */
 router.get('/', 
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { page = 1, limit = 10, category, status = 'PUBLISHED' } = req.query
 
     const pageNum = parseInt(page as string)
@@ -72,8 +72,16 @@ router.get('/',
  * 获取单篇文章详情
  */
 router.get('/:id', 
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: '文章ID不能为空',
+        code: 'INVALID_ARTICLE_ID'
+      })
+    }
 
     const article = await prisma.article.findUnique({
       where: { id },
@@ -126,7 +134,7 @@ router.get('/:id',
  * 获取文章分类列表
  */
 router.get('/categories/list', 
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req: Request, res: Response) => {
     const categories = await prisma.category.findMany({
       orderBy: {
         name: 'asc'

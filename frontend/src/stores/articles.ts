@@ -375,6 +375,450 @@ grouped_data = df.groupby('category').agg({
     publishedAt: '2024-12-03T09:15:00Z',
     createdAt: '2024-12-03T09:15:00Z',
     updatedAt: '2024-12-03T09:15:00Z'
+  },
+  {
+    id: 'art-001',
+    title: 'Vue 3 Composition API 深度解析',
+    content: `# Vue 3 Composition API 深度解析
+
+## 1. 介绍
+
+Vue 3 Composition API 是 Vue.js 框架的一个重大革新，它为开发者提供了更灵活、更强大的组件逻辑组织方式。本文将深入探讨 Composition API 的设计理念、核心概念以及实际应用，帮助你掌握这一现代 Vue 开发的核心技能。
+
+## 2. 为什么需要 Composition API
+
+在 Vue 2 中，我们主要使用 Options API 来组织组件逻辑。虽然这种方式对于小型组件来说很直观，但当组件变得复杂时，相关的逻辑会分散在不同的选项中，导致代码难以维护。
+
+### Options API 的局限性
+
+\`\`\`javascript
+export default {
+  data() {
+    return {
+      count: 0,
+      message: 'Hello'
+    }
+  },
+  computed: {
+    doubleCount() {
+      return this.count * 2
+    }
+  },
+  methods: {
+    increment() {
+      this.count++
+    }
+  },
+  mounted() {
+    console.log('组件已挂载')
+  }
+}
+\`\`\`
+
+## 3. Composition API 基础
+
+Composition API 允许我们将相关的逻辑组织在一起，使代码更加模块化和可复用。
+
+### setup 函数
+
+\`\`\`javascript
+import { ref, computed, onMounted } from 'vue'
+
+export default {
+  setup() {
+    // 响应式状态
+    const count = ref(0)
+    const message = ref('Hello')
+
+    // 计算属性
+    const doubleCount = computed(() => count.value * 2)
+
+    // 方法
+    const increment = () => {
+      count.value++
+    }
+
+    // 生命周期
+    onMounted(() => {
+      console.log('组件已挂载')
+    })
+
+    // 返回模板需要的数据和方法
+    return {
+      count,
+      message,
+      doubleCount,
+      increment
+    }
+  }
+}
+\`\`\`
+
+## 4. 响应式 API
+
+### ref 和 reactive
+
+\`\`\`javascript
+import { ref, reactive } from 'vue'
+
+export default {
+  setup() {
+    // ref 用于基本类型
+    const count = ref(0)
+    const message = ref('Hello')
+
+    // reactive 用于对象
+    const state = reactive({
+      user: {
+        name: 'John',
+        age: 30
+      },
+      todos: []
+    })
+
+    return {
+      count,
+      message,
+      state
+    }
+  }
+}
+\`\`\`
+
+### computed 计算属性
+
+\`\`\`javascript
+import { ref, computed } from 'vue'
+
+export default {
+  setup() {
+    const firstName = ref('John')
+    const lastName = ref('Doe')
+
+    // 只读计算属性
+    const fullName = computed(() => {
+      return \`\${firstName.value} \${lastName.value}\`
+    })
+
+    // 可写计算属性
+    const fullNameWritable = computed({
+      get() {
+        return \`\${firstName.value} \${lastName.value}\`
+      },
+      set(value) {
+        [firstName.value, lastName.value] = value.split(' ')
+      }
+    })
+
+    return {
+      firstName,
+      lastName,
+      fullName,
+      fullNameWritable
+    }
+  }
+}
+\`\`\`
+
+## 5. 生命周期钩子
+
+\`\`\`javascript
+import {
+  onBeforeMount,
+  onMounted,
+  onBeforeUpdate,
+  onUpdated,
+  onBeforeUnmount,
+  onUnmounted
+} from 'vue'
+
+export default {
+  setup() {
+    onBeforeMount(() => {
+      console.log('组件即将挂载')
+    })
+
+    onMounted(() => {
+      console.log('组件已挂载')
+    })
+
+    onBeforeUpdate(() => {
+      console.log('组件即将更新')
+    })
+
+    onUpdated(() => {
+      console.log('组件已更新')
+    })
+
+    onBeforeUnmount(() => {
+      console.log('组件即将卸载')
+    })
+
+    onUnmounted(() => {
+      console.log('组件已卸载')
+    })
+  }
+}
+\`\`\`
+
+## 6. 组合式函数 (Composables)
+
+组合式函数是 Composition API 最强大的特性之一，它允许我们提取和复用有状态的逻辑。
+
+### 创建自定义组合式函数
+
+\`\`\`javascript
+// composables/useCounter.js
+import { ref, computed } from 'vue'
+
+export function useCounter(initialValue = 0) {
+  const count = ref(initialValue)
+
+  const doubleCount = computed(() => count.value * 2)
+
+  const increment = () => {
+    count.value++
+  }
+
+  const decrement = () => {
+    count.value--
+  }
+
+  const reset = () => {
+    count.value = initialValue
+  }
+
+  return {
+    count,
+    doubleCount,
+    increment,
+    decrement,
+    reset
+  }
+}
+\`\`\`
+
+### 使用组合式函数
+
+\`\`\`javascript
+import { useCounter } from './composables/useCounter'
+
+export default {
+  setup() {
+    const { count, doubleCount, increment, decrement, reset } = useCounter(10)
+
+    return {
+      count,
+      doubleCount,
+      increment,
+      decrement,
+      reset
+    }
+  }
+}
+\`\`\`
+
+## 7. 高级特性
+
+### watch 和 watchEffect
+
+\`\`\`javascript
+import { ref, watch, watchEffect } from 'vue'
+
+export default {
+  setup() {
+    const count = ref(0)
+    const message = ref('Hello')
+
+    // watch 特定的响应式引用
+    watch(count, (newValue, oldValue) => {
+      console.log(\`count 从 \${oldValue} 变为 \${newValue}\`)
+    })
+
+    // watch 多个源
+    watch([count, message], ([newCount, newMessage], [oldCount, oldMessage]) => {
+      console.log('count 或 message 发生了变化')
+    })
+
+    // watchEffect 自动追踪依赖
+    watchEffect(() => {
+      console.log(\`当前计数: \${count.value}\`)
+    })
+
+    return {
+      count,
+      message
+    }
+  }
+}
+\`\`\`
+
+### provide 和 inject
+
+\`\`\`javascript
+// 父组件
+import { provide, ref } from 'vue'
+
+export default {
+  setup() {
+    const theme = ref('dark')
+
+    provide('theme', theme)
+
+    return {
+      theme
+    }
+  }
+}
+
+// 子组件
+import { inject } from 'vue'
+
+export default {
+  setup() {
+    const theme = inject('theme', 'light') // 第二个参数是默认值
+
+    return {
+      theme
+    }
+  }
+}
+\`\`\`
+
+## 8. 与 TypeScript 的集成
+
+Composition API 与 TypeScript 有着出色的集成：
+
+\`\`\`typescript
+import { ref, computed, Ref } from 'vue'
+
+interface User {
+  id: number
+  name: string
+  email: string
+}
+
+export default {
+  setup() {
+    const user: Ref<User | null> = ref(null)
+    const loading = ref(false)
+
+    const userDisplayName = computed(() => {
+      return user.value ? user.value.name : '未登录'
+    })
+
+    const fetchUser = async (id: number): Promise<void> => {
+      loading.value = true
+      try {
+        // 模拟 API 调用
+        const response = await fetch(\`/api/users/\${id}\`)
+        user.value = await response.json()
+      } catch (error) {
+        console.error('获取用户信息失败:', error)
+      } finally {
+        loading.value = false
+      }
+    }
+
+    return {
+      user,
+      loading,
+      userDisplayName,
+      fetchUser
+    }
+  }
+}
+\`\`\`
+
+## 9. 最佳实践
+
+### 1. 逻辑分组
+
+将相关的逻辑组织在一起：
+
+\`\`\`javascript
+export default {
+  setup() {
+    // 用户相关逻辑
+    const { user, login, logout } = useAuth()
+
+    // 主题相关逻辑
+    const { theme, toggleTheme } = useTheme()
+
+    // 数据获取逻辑
+    const { data, loading, error, fetchData } = useApi('/api/data')
+
+    return {
+      user,
+      login,
+      logout,
+      theme,
+      toggleTheme,
+      data,
+      loading,
+      error,
+      fetchData
+    }
+  }
+}
+\`\`\`
+
+### 2. 提取可复用逻辑
+
+将可复用的逻辑提取为组合式函数：
+
+\`\`\`javascript
+// composables/useLocalStorage.js
+import { ref, watch } from 'vue'
+
+export function useLocalStorage(key, defaultValue) {
+  const storedValue = localStorage.getItem(key)
+  const value = ref(storedValue ? JSON.parse(storedValue) : defaultValue)
+
+  watch(value, (newValue) => {
+    localStorage.setItem(key, JSON.stringify(newValue))
+  }, { deep: true })
+
+  return value
+}
+\`\`\`
+
+### 3. 合理使用 ref 和 reactive
+
+- 对于基本类型，使用 \`ref\`
+- 对于对象和数组，使用 \`reactive\`
+- 当需要替换整个对象时，使用 \`ref\`
+
+## 10. 总结
+
+Vue 3 Composition API 为我们提供了：
+
+1. **更好的逻辑复用** - 通过组合式函数
+2. **更好的类型推导** - 与 TypeScript 的完美集成
+3. **更灵活的组织方式** - 按功能而非选项组织代码
+4. **更好的性能** - 更精确的依赖追踪
+
+掌握 Composition API 是现代 Vue 开发的必备技能。它不仅让我们的代码更加模块化和可维护，还为构建大型应用提供了强有力的支持。
+
+通过本文的学习，你应该已经掌握了 Composition API 的核心概念和使用方法。继续实践和探索，你将能够充分发挥这一强大特性的潜力。`,
+    excerpt: '深入了解 Vue 3 Composition API 的设计理念和最佳实践，掌握现代 Vue 开发的核心技能。',
+    coverImageUrl: 'https://images.unsplash.com/photo-1517180102446-f3ece451e9d8?w=800&h=400&fit=crop',
+    authorId: '2',
+    author: {
+      id: '2',
+      nickname: '李四',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face'
+    },
+    categoryId: '1',
+    category: { id: '1', name: '前端开发', slug: 'frontend' },
+    isPaid: true,
+    price: 29.99,
+    status: 'PUBLISHED',
+    viewCount: 2500,
+    likeCount: 156,
+    publishedAt: '2024-09-03T14:30:00Z',
+    createdAt: '2024-09-03T14:30:00Z',
+    updatedAt: '2024-09-03T14:30:00Z'
   }
 ]
 
@@ -514,29 +958,33 @@ export const useArticlesStore = defineStore('articles', () => {
       isLoading.value = true
       error.value = null
 
-      // 真实API调用（v2.1版本：移除所有模拟逻辑）
-      const response = await apiClient.get<Article>(`/api/articles/${id}`)
+      // 临时使用模拟数据，直到后端服务正常启动
+      await new Promise(resolve => setTimeout(resolve, 800)) // 模拟网络延迟
 
-      if (response.success && response.data) {
-        currentArticle.value = response.data
+      const mockArticle = mockArticles.find(article => article.id === id)
+
+      if (mockArticle) {
+        currentArticle.value = mockArticle
 
         // 更新文章列表中的对应项
         const index = articles.value.findIndex(article => article.id === id)
         if (index !== -1) {
-          articles.value[index] = response.data
+          articles.value[index] = mockArticle
+        } else {
+          articles.value.push(mockArticle)
         }
 
         // 触发文章查看事件
         eventBus.emit('article:viewed', { articleId: id })
 
-        return { success: true, data: response.data }
+        return { success: true, data: mockArticle }
       } else {
-        throw new Error(response.message || '获取文章失败')
+        throw new Error(`文章不存在，ID: ${id}`)
       }
 
-
     } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || '获取文章失败'
+      error.value = err.message || '获取文章失败'
+      currentArticle.value = null // 确保清除当前文章
       return { success: false, error: error.value }
     } finally {
       isLoading.value = false

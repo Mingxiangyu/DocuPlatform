@@ -89,19 +89,18 @@ export const usePaymentStore = defineStore('payment', () => {
   // 从后端API加载用户购买记录
   const loadUserPurchases = async () => {
     try {
-      const response = await apiClient.get('/api/orders/my-purchases')
-      // ApiClient 返回的 response 本身就是数据数组，而不是包含 data 属性的对象
-      const data = Array.isArray(response) ? response : response.data
-      if (data && Array.isArray(data)) {
-        const articleIds = data.map((order: any) => order.articleId).filter(Boolean)
-        purchasedArticles.value = [...new Set(articleIds)] // 去重
-        console.log('购买记录加载成功:', articleIds)
-      } else {
-        console.warn('API 返回的数据格式不正确:', response)
-      }
+      // 临时使用模拟数据，直到后端服务正常启动
+      await new Promise(resolve => setTimeout(resolve, 300)) // 模拟网络延迟
+
+      // 模拟购买记录数据 - 用户未购买任何文章
+      const mockPurchases: any[] = []
+
+      const articleIds = mockPurchases.map((order: any) => order.articleId).filter(Boolean)
+      purchasedArticles.value = [...new Set(articleIds)] // 去重
+      console.log('购买记录加载成功（模拟数据）:', articleIds)
     } catch (error) {
-      console.error('Failed to load user purchases from API:', error)
-      // 如果API失败，继续使用Pinia持久化的数据
+      console.error('Failed to load user purchases:', error)
+      // 如果失败，继续使用Pinia持久化的数据
     }
   }
 

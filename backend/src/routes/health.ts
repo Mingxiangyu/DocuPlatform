@@ -7,7 +7,7 @@ const router = Router()
 /**
  * 健康检查接口
  */
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   try {
     const startTime = Date.now()
     
@@ -55,7 +55,7 @@ router.get('/', async (req, res) => {
 /**
  * 详细健康检查接口
  */
-router.get('/detailed', async (req, res) => {
+router.get('/detailed', async (_req, res) => {
   try {
     const startTime = Date.now()
     
@@ -211,7 +211,9 @@ async function checkRedisDetailed() {
       responseTime: `${responseTime}ms`,
       info: info.split('\r\n').filter(line => line.includes(':')).reduce((acc, line) => {
         const [key, value] = line.split(':')
-        acc[key] = value
+        if (key && value) {
+          acc[key.trim()] = value.trim()
+        }
         return acc
       }, {} as Record<string, string>)
     }

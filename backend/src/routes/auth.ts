@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router, Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import { prisma } from '../server'
 import { JWTService } from '../utils/jwt'
@@ -15,7 +15,7 @@ const router = Router()
  */
 router.post('/register', 
   validate(authValidations.register),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { email, password, nickname } = req.body
 
     // 检查邮箱是否已存在

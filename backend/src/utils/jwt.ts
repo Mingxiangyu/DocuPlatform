@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { JWTPayload } from '@types/auth'
+import { JWTPayload } from '../types/auth'
 import { logger } from '@utils/logger'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key'
@@ -16,7 +16,7 @@ export class JWTService {
         expiresIn: JWT_EXPIRES_IN,
         issuer: 'docuvault',
         audience: 'docuvault-users'
-      })
+      } as jwt.SignOptions)
     } catch (error) {
       logger.error('生成访问token失败:', error)
       throw new Error('Token生成失败')

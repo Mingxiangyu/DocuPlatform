@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { AuthenticatedRequest, Permission, ROLE_PERMISSIONS } from '@types/auth'
+import { AuthenticatedRequest, Permission, ROLE_PERMISSIONS } from '../types/auth'
 import { JWTService } from '@utils/jwt'
 import { prisma } from '../server'
 import { logger } from '@utils/logger'
